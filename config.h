@@ -26,7 +26,7 @@
 #define MAX_POUR_OUT_WATER_TEMPERATURE 850 // Максимальная температура воды которую можно сливать в каналюгу (в еденицах ADC)
 
 // Настройки отжима
-#define LEN_QUEUE_VIBRATION 25 // Длинна буфера для стабилизации уровня вибраций
+#define LEN_QUEUE_VIBRATION 10 // Длинна буфера для стабилизации уровня вибраций
 #define SPEED_FOR_SHAKE_DRESS 18 // Скорость для встряски белья перед попыткой балансировки
 #define TIME_FOR_SHAKE_DRESS 12 // Время встряски белья
 #define WRING_BALANSING_DELAY_TIME 3 //Задержка между некоторыми шагами процесса балансировки белья

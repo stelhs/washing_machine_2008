@@ -29,6 +29,7 @@ CALLBACK_NAME(PROCESS_MENU, run)(char *params)
 
 CALLBACK_NAME(PROCESS_MENU, active)(struct task_info *from)
 {
+    printf("menu: active from = %d\r\n", from -> from_task_id);
     States_menu.return_task_id = from -> from_task_id; // Сохраняем номер процесса для возврата в него по выходу из меню
 	full_draw_menu();
 }
@@ -53,7 +54,12 @@ CALLBACK_NAME(PROCESS_MENU, click_down)(void)
 
 CALLBACK_NAME(PROCESS_MENU, click_esc)(void)
 {
-	menu_press_esc();
+	int rc = menu_press_esc();
+	if (rc) {
+        printf("menu: exit to %d\r\n", States_menu.return_task_id);
+        switch_process(States_menu.return_task_id);
+	}
+
 }
 
 CALLBACK_NAME(PROCESS_MENU, click_enter)(void)
@@ -63,7 +69,6 @@ CALLBACK_NAME(PROCESS_MENU, click_enter)(void)
 
 CALLBACK_NAME(PROCESS_MENU, click_ext1)(void)
 {
-    switch_process(States_menu.return_task_id);
 }
 
 CALLBACK_NAME(PROCESS_MENU, timer2)(void)

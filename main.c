@@ -176,9 +176,10 @@ ISR(INT0_vect) // Сигнал 100Hz для синхронизации упра�
 	if(Motor_power) //Если установленна мощность на мотор
 	{
 		pwm = MAX_PWM_VALUE - (uint16_t)Motor_power; // Расчитываем задержку для достижения требуемой мощности
-		if(pwm < MIN_PWM_VALUE)
+/*		if(pwm < MIN_PWM_VALUE)
 		{
 			pwm = MIN_PWM_VALUE - 1;
+			printf("enable full power");
 			Machine_states.enable_full_motor_power = 1; //Включаем полную мощность
 			turn_motor_power(ON);
 		}
@@ -187,7 +188,7 @@ ISR(INT0_vect) // Сигнал 100Hz для синхронизации упра�
 			{
 				turn_motor_power(OFF);
 				Machine_states.enable_full_motor_power = 0;
-			}
+			}*/
 
 		if(pwm > MAX_PWM_VALUE)
 			pwm = MAX_PWM_VALUE;
@@ -222,6 +223,7 @@ ISR(ADC_vect)
 
 void init(void)
 {
+	cli();
 	init_external_clock(); // Инициализация внешних часов
 	init_relays();
 	init_int0(); //Инициализация внешнего прерывания для снятия сигнала 100Hz
@@ -237,14 +239,19 @@ void init(void)
 	USART_Init0(UBRR0); // Инициализация COM1
 	set_dev_in_out(COMPORT_USER);
 
+printf("STEP 1\r\n");
+
     change_channel_adc(TEMPERATURE_SENSOR_CHANNEL_NUM);
+printf("STEP 2\r\n");
     init_adc();
+printf("STEP 3\r\n");
 
 	init_display();
-
-	write_disable_to_rs485();
+printf("STEP 4\r\n");
 
 	clr_lcd_buf();
+
+printf("STEP 5\r\n");
 
 	Main_current_time.hour = 0;
 	Main_current_time.min = 0;
@@ -278,10 +285,13 @@ void init(void)
 	// Обнуляем все таймеры
 	Machine_timers.delay_next_impulse = 1;
 	Machine_timers.pour_out_water_timer = 0;
- 	sei();	// Разрешаем все прерывания
+
 	power_off_system(); // Поумолчанию приводим все в выключенное состояние
+
 	init_liveos(&Lib_liveos); // Инициализируем операционную систему
+
 	wdt_enable(WDTO_2S); // Включаем вэтчдог
+ 	sei();	// Разрешаем все прерывания
 }
 
 int main(void)
@@ -332,7 +342,6 @@ int main(void)
 				Motor_power = MAX_PWM_VALUE;
 
 			Machine_states.refresh_rotate_speed = 0;
-			printf("%d, %d, %d\r\n", Machine_states.need_speed_rotating, Rotating_speed, Motor_power);
 		}
 
 		if(!Machine_states.need_speed_rotating)

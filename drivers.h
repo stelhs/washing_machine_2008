@@ -247,7 +247,6 @@ void lcd_rus(char c, FILE *unused); // Вывод символа в LCD
 	DDRF &= ~_BV(PF1);	\
 	ADCSRA = _BV(ADEN) | _BV(ADIE) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);	\
 	ADMUX = 0b10000000;	\
-	SREG |= _BV(7);	\
 	ADCSRA |= _BV(ADSC);	\
 	PORTF &= ~_BV(PF0);	\
 	PORTF &= ~_BV(PF1);	\

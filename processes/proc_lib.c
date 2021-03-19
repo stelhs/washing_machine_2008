@@ -5,9 +5,9 @@
 #include "../lcd_buffer.h"
 #include "lib_menu.h"
 
-uint16_t conv_temperature_to_adc_val(uint8_t temperature) //Р¤СѓРЅРєС†РёСЏ РєРѕРЅРІРµСЂС‚Р°С†РёРё С‚РµРјРїРµСЂР°С‚СѓСЂС‹ РІ Р·РЅР°С‡РµРЅРёРµ СЃ ADC РїСЂРµРѕР±СЂР°Р·РѕРІР°С‚РµР»СЏ
+uint16_t conv_temperature_to_adc_val(uint8_t temperature) //Функция конвертации температуры в значение с ADC преобразователя
 {
-	switch(temperature) // Р’СЃРµ СЌС‚Рё С†РёС„СЂС‹ С‚С‰Р°С‚РµР»СЊРЅРѕ РїРѕРґРѕРіРЅР°РЅРЅС‹ РѕРїС‹С‚РЅС‹Рј РїСѓС‚РµРј(РјРµС‚РѕРґРѕРј Р·Р°РјРµСЂР° СЂРµР°Р»СЊРЅРѕР№ С‚РµРјРїРµСЂР°С‚СѓСЂС‹).
+	switch(temperature) // Все эти цифры тщательно подогнанны опытным путем(методом замера реальной температуры).
 	{
 		case 0:
 		case 10:
@@ -35,7 +35,7 @@ uint16_t conv_temperature_to_adc_val(uint8_t temperature) //Р¤СѓРЅРєС†РёСЏ РєРѕР
 	return 0;
 }
 
-void draw_current_time(struct time *t, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ СЂРµР°Р»СЊРЅРѕРµ РІСЂРµРјСЏ
+void draw_current_time(struct time *t, uint8_t need_redraw) //Отрисовать реальное время
 {
 	static char time[9];
 	if(t != NULL)
@@ -64,7 +64,7 @@ void draw_current_time(struct time *t, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚
 	}
 }
 
-void draw_current_date(struct time *t, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ С‚РµРєСѓС‰СѓСЋ РґР°С‚Сѓ
+void draw_current_date(struct time *t, uint8_t need_redraw) //Отрисовать текущую дату
 {
 	static char date[13];
 	static uint8_t day_of_week = 1;
@@ -84,9 +84,9 @@ void draw_current_date(struct time *t, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚
 			snprintf(date + strlen(date), sizeof(date) - strlen(date), "%.2d.", t -> month);
 
 		if(t -> year > 99)
-			snprintf(date + strlen(date), sizeof(date) - strlen(date), "20  Рі.");
+			snprintf(date + strlen(date), sizeof(date) - strlen(date), "20  г.");
 		else
-			snprintf(date + strlen(date), sizeof(date) - strlen(date), "20%.2dРі.", t -> year);
+			snprintf(date + strlen(date), sizeof(date) - strlen(date), "20%.2dг.", t -> year);
 
 		day_of_week = t -> day_of_week;
 	}
@@ -106,7 +106,7 @@ void draw_current_date(struct time *t, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚
 	}
 }
 
-void draw_work_time(struct time *t, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ РІСЂРµРјСЏ СЂР°Р±РѕС‚С‹
+void draw_work_time(struct time *t, uint8_t need_redraw) //Отрисовать время работы
 {
 	static char time[9];
 	if(t != NULL)
@@ -120,13 +120,13 @@ void draw_work_time(struct time *t, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ 
 }
 
 
-void draw_center_pointer(void) // РћС‚СЂРёСЃРѕРІР°С‚СЊ СЃС‚СЂРµР»РѕС‡РєСѓ РІ С†РµРЅС‚СЂРµ
+void draw_center_pointer(void) // Отрисовать стрелочку в центре
 {
 	gotoxy_lcd_buf(9, 0);
 	print_lcd_buf("->");
 }
 
-void draw_calculate_time(struct time *t, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ СЂР°СЃС‡РµС‚РЅРѕРµ РІСЂРµРјСЏ
+void draw_calculate_time(struct time *t, uint8_t need_redraw) //Отрисовать расчетное время
 {
 	static char time[12];
 	if(t != NULL)
@@ -139,7 +139,7 @@ void draw_calculate_time(struct time *t, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°
 	}
 }
 
-void draw_prog_name(const char *name, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ РЅР°Р·РІР°РЅРёРµ РїСЂРѕРіСЂР°РјРјС‹
+void draw_prog_name(const char *name, uint8_t need_redraw) //Отрисовать название программы
 {
 	static const char *prev_name = NULL;
 
@@ -157,9 +157,9 @@ void draw_prog_name(const char *name, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚С
 	prev_name = name;
 }
 
-void draw_step_name(const char *name, uint8_t step_num, uint8_t count_step, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ РЅР°Р·РІР°РЅРёРµ Рё РЅРѕРјРµСЂ С‚РµРєСѓС‰РµРіРѕ С€Р°РіР° РІС‹РїРѕР»РЅРµРЅРёСЏ
+void draw_step_name(const char *name, uint8_t step_num, uint8_t count_step, uint8_t need_redraw) //Отрисовать название и номер текущего шага выполнения
 {
-	char buffer[DISPLAY_WIDTH]; // РЎРѕР·РґР°РµРј Р±СѓС„РµСЂ
+	char buffer[DISPLAY_WIDTH]; // Создаем буфер
 	uint8_t name_len = 0;
 	static const char *prev_name = NULL;
 	static uint8_t prev_step_num = 0;
@@ -168,7 +168,7 @@ void draw_step_name(const char *name, uint8_t step_num, uint8_t count_step, uint
 	if(name == NULL && prev_name == NULL)
 		return;
 
-	if(name == NULL) // Р•СЃР»Рё РїРµСЂРµРґР°РµРј NULL С‚Рѕ РІРѕСЃСЃС‚Р°РЅРІР»РёРІР°РµРј РѕС‚СЂРёСЃРѕРІС‹РІР°РµРј РїСЂРµРґС‹РґСѓС‰РёРµ РґР°РЅРЅС‹Рµ СЃРѕС…СЂР°РЅРµРЅРЅС‹Рµ РІ static
+	if(name == NULL) // Если передаем NULL то восстанвливаем отрисовываем предыдущие данные сохраненные в static
 	{
 		name = prev_name;
 		step_num = prev_step_num;
@@ -192,7 +192,7 @@ void draw_step_name(const char *name, uint8_t step_num, uint8_t count_step, uint
 	prev_count_step = count_step;
 }
 
-void draw_operation_name(const char *name, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ РЅР°Р·РІР°РЅРёРµ С‚РµРєСѓС‰РµР№ РѕРїРµСЂР°С†РёРё
+void draw_operation_name(const char *name, uint8_t need_redraw) //Отрисовать название текущей операции
 {
 	static const char *prev_name = NULL;
 
@@ -211,7 +211,7 @@ void draw_operation_name(const char *name, uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІ
 	prev_name = name;
 }
 
-void draw_pause(uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ С‚РµРєСЃС‚ РїР°СѓР·С‹
+void draw_pause(uint8_t need_redraw) //Отрисовать текст паузы
 {
 	if(need_redraw)
 	{
@@ -221,7 +221,7 @@ void draw_pause(uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ С‚РµРєСЃС‚ РїР°СѓР·С
 	}
 }
 
-void draw_close_door(uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ С‚РµРєСЃС‚ РѕР¶РёРґР°РЅРёСЏ Р·Р°РєСЂС‹С‚РёСЏ Р»СЋРєР°
+void draw_close_door(uint8_t need_redraw) //Отрисовать текст ожидания закрытия люка
 {
 	if(need_redraw)
 	{
@@ -235,7 +235,7 @@ void draw_close_door(uint8_t need_redraw) //РћС‚СЂРёСЃРѕРІР°С‚СЊ С‚РµРєСЃС‚ РѕР¶
 	}
 }
 
-void triggered_menu_items(uint8_t *list, uint8_t count) // РРЅРІРµСЂС‚РёСЂРѕРІР°С‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ РјРµРЅСЋ id РєРѕС‚РѕСЂС‹С… РїРµСЂРµС‡РёСЃР»РµРЅРЅС‹ РІ РјР°СЃСЃРёРІРµ list
+void triggered_menu_items(uint8_t *list, uint8_t count) // Инвертировать состояние элементов меню id которых перечисленны в массиве list
 {
 	uint8_t i;
 	for(i = 0; i < count; i++)

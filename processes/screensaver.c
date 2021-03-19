@@ -10,20 +10,20 @@
 #include "../lcd_buffer.h"
 #include "proc_lib.h"
 
-extern struct time Main_current_time; // Р§Р°СЃС‹ СЂРµР°Р»СЊРЅРѕРіРѕ РІСЂРµРјРµРЅРё
-extern struct machine_states Machine_states; // РЎРѕСЃС‚РѕСЏРЅРёРµ РІСЃРµР№ РјР°С€РёРЅС‹
-extern struct machine_settings Machine_settings; // Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё СЃС‚РёСЂР°Р»СЊРЅРѕР№ РјР°С€РёРЅС‹
+extern struct time Main_current_time; // Часы реального времени
+extern struct machine_states Machine_states; // Состояние всей машины
+extern struct machine_settings Machine_settings; // Глобальные настройки стиральной машины
 
 struct
 {
-	uint8_t need_result_draw : 1; // Р•СЃР»Рё Р±РёС‚ РІС‹СЃС‚Р°РІР»РµРЅ РІ 1 , Р·РЅР°С‡РёС‚ РЅР°РґРѕ РѕС‚СЂРёСЃРѕРІР°С‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚С‹ СЃС‚РёСЂРєРё РёР»Рё Р·Р°РјР°С‡РёРІР°РЅРёСЏ
-	uint8_t disable_draw_date : 1; // Р•СЃР»Рё РґР°РЅРЅС‹Р№ Р±РёС‚ РІС‹СЃС‚Р°РІР»РµРЅ РІ 1 С‚Рѕ РґР°С‚Р° РЅРµ РѕС‚СЂРёСЃРѕРІС‹РІР°РµС‚СЃСЏ
-	uint16_t shutdown_timer : 14; //РўР°Р№РјРµСЂ Р°РІС‚РѕРІС‹РєР»СЋС‡РµРЅРёСЏ РјР°С€РёРЅС‹ РїСЂРё Р°РєС‚РёРІР°С†РёРё РґР°РЅРЅРѕРіРѕ РјРѕРґСѓР»СЏ
+	uint8_t need_result_draw : 1; // Если бит выставлен в 1 , значит надо отрисовать результаты стирки или замачивания
+	uint8_t disable_draw_date : 1; // Если данный бит выставлен в 1 то дата не отрисовывается
+	uint16_t shutdown_timer : 14; //Таймер автовыключения машины при активации данного модуля
 }Screensaver_state;
 
 
 
-static void draw_welcom(void) //РћС‚СЂРёСЃРѕРІР°С‚СЊ РїСЂРёРІРµС‚СЃС‚РІРёРµ
+static void draw_welcom(void) //Отрисовать приветствие
 {
 	const char *str1, *str2;
 	static uint8_t welcom_message_num = 0;
@@ -31,38 +31,38 @@ static void draw_welcom(void) //РћС‚СЂРёСЃРѕРІР°С‚СЊ РїСЂРёРІРµС‚СЃС‚РІРёРµ
 	switch(welcom_message_num)
 	{
 		case 0:
-			str1 = PSTR("Р§С‚РѕС‚Рѕ Р±СѓРґРµРј");
-			str2 = PSTR("СЃС‚РёСЂР°С‚СЊ?");
+			str1 = PSTR("Что-то будем");
+			str2 = PSTR("стирать?");
 		break;
 
 		case 1:
-			str1 = PSTR("Р§С‚Рѕ РЅР° СЌС‚РѕС‚ СЂР°Р·");
-			str2 = PSTR("РѕС‚ РјРµРЅСЏ РЅР°РґРѕ?");
+			str1 = PSTR("Что на этот раз");
+			str2 = PSTR("от меня надо?");
 		break;
 
 		case 2:
-			str1 = PSTR("Р§С‚Рѕ Р±СѓРґРµРј");
-			str2 = PSTR("РґРµР»Р°С‚СЊ?");
+			str1 = PSTR("Что будем");
+			str2 = PSTR("делать?");
 		break;
 
 		case 3:
-			str1 = PSTR("РћРїСЏС‚СЊ СЃС‚РёСЂР°С‚СЊ, Р”Р°?");
+			str1 = PSTR("Опять стирать, Да?");
 			str2 = PSTR("");
 		break;
 
 		case 4:
-			str1 = PSTR("Р”Р°, СЏ СЃРµР№С‡Р°СЃ С…РѕС‡Сѓ");
-			str2 = PSTR("С‡С‚Рѕ-С‚Рѕ РїРѕСЃС‚РёСЂР°С‚СЊ!");
+			str1 = PSTR("Да, я сейчас хочу");
+			str2 = PSTR("что-то постирать!");
 		break;
 
 		case 5:
-			str1 = PSTR("РњРѕР¶РµС‚ РІ РґСЂСѓРіРѕР№");
-			str2 = PSTR("СЂР°Р· Р±СѓРґРµРј СЃС‚РёСЂР°С‚СЊ?");
+			str1 = PSTR("Может в другой");
+			str2 = PSTR("раз будем стирать?");
 		break;
 
 		case 6:
-			str1 = PSTR("РЈР Рђ! РќР°РєРѕРЅРµС†С‚Рѕ РјС‹");
-			str2 = PSTR("Р±СѓРґРµРј СЃС‚РёСЂР°С‚СЊ!");
+			str1 = PSTR("УРА! Наконец-то мы");
+			str2 = PSTR("будем стирать!");
 		break;
 	}
 
@@ -70,22 +70,22 @@ static void draw_welcom(void) //РћС‚СЂРёСЃРѕРІР°С‚СЊ РїСЂРёРІРµС‚СЃС‚РІРёРµ
 	clear_line_buf(3);
 	gotoxy_lcd_buf(get_center(strlen_P(str1)), 2); print_lcd_buf_P(str1);
 	gotoxy_lcd_buf(get_center(strlen_P(str2)), 3); print_lcd_buf_P(str2);
-	welcom_message_num++; // РЈРІРµР»РёС‡РёРІР°РµРј РЅРѕРјРµСЂ СЃР»РµРґСѓСЋС‰РµРіРѕ РІС‹РІРѕРґРёРјРѕРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ
+	welcom_message_num++; // Увеличиваем номер следующего выводимого сообщения
 
-	if(welcom_message_num > 6) // Р•СЃР»Рё РґРѕС€Р»Рё РґРѕ РїРѕСЃР»РµРґРЅРµРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ С‚Рѕ РѕР±РЅСѓР»СЏРµРј СЃС‡РµС‚С‡РёРє
+	if(welcom_message_num > 6) // Если дошли до последнего сообщения то обнуляем счетчик
 		welcom_message_num = 0;
 
 	Screensaver_state.disable_draw_date = 1;
 }
 
 
-CALLBACK_NAME(PROCESS_SCREENSAVER, init)(void) // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїСЂРѕС†РµСЃСЃР° СЃС‚РёСЂРєРё
+CALLBACK_NAME(PROCESS_SCREENSAVER, init)(void) // Инициализация процесса стирки
 {
 	Screensaver_state.need_result_draw = 0;
 	Screensaver_state.disable_draw_date = 0;
 }
 
-CALLBACK_NAME(PROCESS_SCREENSAVER, run)(char *params) // Р—Р°РїСѓСЃРє РїСЂРѕС†РµСЃСЃР°
+CALLBACK_NAME(PROCESS_SCREENSAVER, run)(char *params) // Запуск процесса
 {
 }
 
@@ -96,7 +96,7 @@ CALLBACK_NAME(PROCESS_SCREENSAVER, active)(struct task_info *from)
 	Screensaver_state.shutdown_timer = AUTO_POWER_OFF_TIMEOUT;
 
 	draw_current_time(&Main_current_time, 1);
-	if(Screensaver_state.need_result_draw) // РµСЃР»Рё РЅСѓР¶РЅРѕ РѕС‚РѕР±СЂР°Р·РёС‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚С‹ СЃС‚РёСЂРєРё
+	if(Screensaver_state.need_result_draw) // если нужно отобразить результаты стирки
 	{
 		draw_calculate_time(NULL, 1);
 		draw_prog_name(NULL, 1);
@@ -108,13 +108,13 @@ CALLBACK_NAME(PROCESS_SCREENSAVER, active)(struct task_info *from)
 	else
 	{
 		draw_current_date(&Main_current_time, 1);
-		Machine_states.current_machine_state = LED_OFF; // Р’С‹РєР»СЋС‡Р°РµРј РІСЃРµ СЃРІРµС‚РѕРґРёРѕРґС‹
+		Machine_states.current_machine_state = LED_OFF; // Выключаем все светодиоды
 	}
 }
 
 CALLBACK_NAME(PROCESS_SCREENSAVER, main_loop)(void)
 {
-	if(Machine_states.change_current_time) // Р•СЃР»Рё РёР·РјРµРЅРёР»РѕСЃСЊ РІСЂРµРјСЏ, С‚Рѕ РїРµСЂРµСЂРёСЃРѕРІС‹РІР°РµРј С‚РµРєСѓС‰РµРµ РІСЂРµРјСЏ
+	if(Machine_states.change_current_time) // Если изменилось время, то перерисовываем текущее время
 	{
 		Machine_states.change_current_time = 0;
 		draw_current_time(&Main_current_time, 1);
@@ -122,7 +122,7 @@ CALLBACK_NAME(PROCESS_SCREENSAVER, main_loop)(void)
 			draw_current_date(&Main_current_time, 1);
 	}
 
-	if(Screensaver_state.shutdown_timer == 1) //Р•СЃР»Рё РїСЂРѕС€Р»Рѕ РІСЂРµРјСЏ СЃРІРѕР±РѕРґРЅРѕРіРѕ РїСЂРѕСЃС‚РѕСЏ, С‚Рѕ РІС‹РєР»СЋС‡Р°РµРј РјР°С€РёРЅСѓ
+	if(Screensaver_state.shutdown_timer == 1) //Если прошло время свободного простоя, то выключаем машину
 	{
 		Screensaver_state.shutdown_timer = 0;
 		Machine_states.current_machine_state = LED_OFF;
@@ -135,24 +135,24 @@ CALLBACK_NAME(PROCESS_SCREENSAVER, click_up)(void)
 {
 	Screensaver_state.shutdown_timer = 0;
 	if(Machine_states.main_power)
-		switch_process(PROCESS_MENU); //Р’С…РѕРґ РІ РјРµРЅСЋ
+		switch_process(PROCESS_MENU); //Вход в меню
 }
 
 CALLBACK_NAME(PROCESS_SCREENSAVER, click_down)(void)
 {
 	Screensaver_state.shutdown_timer = 0;
 	if(Machine_states.main_power)
-		switch_process(PROCESS_MENU); //Р’С…РѕРґ РІ РјРµРЅСЋ
+		switch_process(PROCESS_MENU); //Вход в меню
 }
 
 CALLBACK_NAME(PROCESS_SCREENSAVER, click_enter)(void)
 {
 	Screensaver_state.shutdown_timer = 0;
 	if(Machine_states.main_power)
-		switch_process(PROCESS_MENU); //Р’С…РѕРґ РІ РјРµРЅСЋ
+		switch_process(PROCESS_MENU); //Вход в меню
 }
 
-CALLBACK_NAME(PROCESS_SCREENSAVER, long_enter)(void) // РїСЂРё РґРѕР»РіРѕРј СѓРґРµСЂР¶РёРІР°РЅРёРё РІРєР»СЋС‡Р°РµРј РёР»Рё РІС‹РєР»СЋС‡Р°РµРј СЃС‚РёСЂР°Р»СЊРЅСѓСЋ РјР°С€РёРЅСѓ
+CALLBACK_NAME(PROCESS_SCREENSAVER, long_enter)(void) // при долгом удерживании включаем или выключаем стиральную машину
 {
 	if(!Machine_states.main_power)
 	{
@@ -170,7 +170,7 @@ CALLBACK_NAME(PROCESS_SCREENSAVER, click_esc)(void)
 {
 	Screensaver_state.shutdown_timer = 0;
 	if(Machine_states.main_power)
-		switch_process(PROCESS_MENU); //Р’С…РѕРґ РІ РјРµРЅСЋ
+		switch_process(PROCESS_MENU); //Вход в меню
 }
 
 int t=0;
@@ -182,7 +182,7 @@ CALLBACK_NAME(PROCESS_SCREENSAVER, console)(char input_byte)
 	switch(input_byte)
 	{
 		case '7':
-			switch_process(PROCESS_MENU); //Р’С…РѕРґ РІ РјРµРЅСЋ
+			switch_process(PROCESS_MENU); //Вход в меню
 		break;
 
 		case 'z':
@@ -202,27 +202,27 @@ CALLBACK_NAME(PROCESS_SCREENSAVER, console)(char input_byte)
 	}
 }
 
-CALLBACK_NAME(PROCESS_SCREENSAVER, signal)(uint8_t signal) // РћР±СЂР°Р±РѕС‚С‡РёРє РІС…РѕРґСЏС‰РµРіРѕ СЃРёРіРЅР°Р»Р°
+CALLBACK_NAME(PROCESS_SCREENSAVER, signal)(uint8_t signal) // Обработчик входящего сигнала
 {
 	switch(signal)
 	{
-		case 3:  // РЎРёРіРЅР°Р» РѕР·РЅР°С‡Р°СЋС‰РёР№ С‡С‚Рѕ РЅР°РґРѕ РІС‹РІРµСЃС‚Рё СЂРµР·СѓР»СЊС‚Р°С‚С‹ СЃС‚РёСЂРєРё
+		case 3:  // Сигнал означающий что надо вывести результаты стирки
 			Screensaver_state.need_result_draw = 1;
 			if(Machine_settings.sound)
-				turn_blink_speaker(ON, 1000, 300, SPEAKER_SOUND_FREQ, 3); //РџРёС‰РёРј С‚СЂРё СЂР°Р·Р°
+				turn_blink_speaker(ON, 1000, 300, SPEAKER_SOUND_FREQ, 3); //Пищим три раза
 		break;
 	}
 }
 
 CALLBACK_NAME(PROCESS_SCREENSAVER, timer0)(void)
 {
-	if(!Machine_states.main_power) // Р•СЃР»Рё РјР°С€РёРЅР° РІС‹РєР»СЋС‡РµРЅРЅР°
+	if(!Machine_states.main_power) // Если машина выключенна
 	{
 		Screensaver_state.shutdown_timer = 0;
 		return;
 	}
 
-	//Р•СЃР»Рё СЃР»РµРґСѓСЋС‰РёРµ РїСЂРѕС†РµСЃСЃС‹ Р·Р°РїСѓС‰РµРЅРЅС‹ С‚Рѕ Р°РІС‚РѕРІС‹РєР»СЋС‡РµРЅРёРµ РїРёС‚Р°РЅРёСЏ РЅРµСЂР°Р±РѕС‚Р°РµС‚
+	//Если следующие процессы запущенны то автовыключение питания неработает
 	if(	get_process_status(PROCESS_WASHING) == RUNNING
 		|| get_process_status(PROCESS_BEDABBLE) == RUNNING
 		|| get_process_status(PROCESS_RINSE) == RUNNING
@@ -231,7 +231,7 @@ CALLBACK_NAME(PROCESS_SCREENSAVER, timer0)(void)
 		return;
 	}
 
-	if(Screensaver_state.shutdown_timer > 1) //РўР°Р№РјРµСЂ РґР»СЏ РѕР±СЂР°С‚РЅРѕРіРѕ РѕС‚СЃС‡РµС‚Р° Р°РІС‚РѕРІС‹РєР»СЋС‡РµРЅРёСЏ РїРёС‚Р°РЅРёСЏ
+	if(Screensaver_state.shutdown_timer > 1) //Таймер для обратного отсчета автовыключения питания
 		Screensaver_state.shutdown_timer --;
 }
 

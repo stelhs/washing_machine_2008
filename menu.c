@@ -7,26 +7,26 @@
 #include "lib.h"
 #include "os.h"
 #include "lcd_buffer.h"
-#include "../../lib/lib_menu.h" //РћРїРёСЃР°РЅРёРµ Р±РёР±Р»РёРѕС‚РµРєРё РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ РјРµРЅСЋ
+#include "../../lib/lib_menu.h" //Описание библиотеки для работы с меню
 
-extern struct washing_settings Washing_settings; // РќСЃС‚СЂРѕР№РєРё СЂРµРіСѓР»РёСЂСѓРµРјС‹Рµ СЃ РјРµРЅСЋ
-extern struct machine_settings Machine_settings; // Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё СЃС‚РёСЂР°Р»СЊРЅРѕР№ РјР°С€РёРЅС‹
+extern struct washing_settings Washing_settings; // Нстройки регулируемые с меню
+extern struct machine_settings Machine_settings; // Глобальные настройки стиральной машины
 
-static PGM_P const PROGMEM Select_switch[] = {GET_MESS_POINTER(MENU_SELECT_SWITCH_1), GET_MESS_POINTER(MENU_SELECT_SWITCH_2)}; // Р’Р°СЂРёР°РЅС‚С‹ РІС‹Р±РѕСЂР° РІРєР»СЋС‡РµРЅРЅРѕ РёР»Рё РІС‹РєР»СЋС‡РµРЅРЅРѕ
-static PGM_P const PROGMEM Select_bedabble_time[] = {GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_1), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_2), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_3), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_4), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_5), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_6)}; // Р’Р°СЂРёР°РЅС‚С‹ РІС‹Р±РѕСЂР° РІСЂРµРјРµРЅРё Р·Р°РјР°С‡РёРІР°РЅРёСЏ
-PGM_P const PROGMEM Select_washing_presetes[] = {GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_1), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_2), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_3), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_4), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_5), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_6), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_7), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_8)}; // РџСЂРµСЃРµС‚С‹ РїР°СЂР°РјРµС‚СЂРѕРІ СЃС‚РёСЂРєРё
-static PGM_P const PROGMEM Select_washing_mode[] = {GET_MESS_POINTER(MENU_SELECT_WASHING_MODE_NORMAL), GET_MESS_POINTER(MENU_SELECT_WASHING_MODE_DELICATE)}; // Р РµР¶РёРј СЃС‚РёСЂРєРё
-static PGM_P const PROGMEM Select_temperatures[] = {GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_1), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_2), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_3), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_4), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_5), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_6)}; // Р’Р°СЂРёР°РЅС‚С‹ РІС‹Р±РѕСЂР° С‚РµРјРїРµСЂР°С‚СѓСЂС‹
-
-
+static PGM_P const PROGMEM Select_switch[] = {GET_MESS_POINTER(MENU_SELECT_SWITCH_1), GET_MESS_POINTER(MENU_SELECT_SWITCH_2)}; // Варианты выбора включенно или выключенно
+static PGM_P const PROGMEM Select_bedabble_time[] = {GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_1), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_2), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_3), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_4), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_5), GET_MESS_POINTER(MENU_SELECT_BEDABBLE_TIME_6)}; // Варианты выбора времени замачивания
+PGM_P const PROGMEM Select_washing_presetes[] = {GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_1), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_2), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_3), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_4), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_5), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_6), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_7), GET_MESS_POINTER(MENU_SELECT_WASHING_PRESET_8)}; // Пресеты параметров стирки
+static PGM_P const PROGMEM Select_washing_mode[] = {GET_MESS_POINTER(MENU_SELECT_WASHING_MODE_NORMAL), GET_MESS_POINTER(MENU_SELECT_WASHING_MODE_DELICATE)}; // Режим стирки
+static PGM_P const PROGMEM Select_temperatures[] = {GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_1), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_2), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_3), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_4), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_5), GET_MESS_POINTER(MENU_SELECT_TEMPERATURE_6)}; // Варианты выбора температуры
 
 
-static void clear_screen(void) //РћС‚С‡РёСЃС‚РёС‚СЊ РґРёСЃРїР»РµР№
+
+
+static void clear_screen(void) //Отчистить дисплей
 {
     clr_lcd_buf();
 }
 
-void print_header(const char *header) // РћС‚СЂРёСЃРѕРІР°С‚СЊ Р·Р°РіРѕР»РѕРІРѕРє РјРµРЅСЋ
+void print_header(const char *header) // Отрисовать заголовок меню
 {
 	fill_line_buf(0, '-');
 
@@ -46,11 +46,11 @@ void print_header(const char *header) // РћС‚СЂРёСЃРѕРІР°С‚СЊ Р·Р°РіРѕР»РѕРІРѕРє
 	putchar_lcd_buf(' ');
 }
 
-// РћС‚СЂРёСЃРѕРІР°С‚СЊ СЌР»РµРјРµРЅС‚ РјРµРЅСЋ
-// num_row - РќРѕРјРµСЂ СЃС‚СЂРѕРєРё
-// pointer_type - С‚РёРї СѓРєР°Р·Р°С‚РµР»СЏ РЅР° СЃС‚СЂРѕРєСѓ
-// name - СЃС‚СЂРѕРєР° СЃ С‚РµРєСЃС‚РѕРј
-// is_active - Р­Р»РµРјРµРЅС‚ Р°РєС‚РёРІРЅС‹Р№ РёР»Рё РЅРµС‚
+// Отрисовать элемент меню
+// num_row - Номер строки
+// pointer_type - тип указателя на строку
+// name - строка с текстом
+// is_active - Элемент активный или нет
 static void print_item(uint8_t num_row, uint8_t pointer_type, void *name, uint8_t is_active)
 {
     clear_line_buf(num_row + HEADER_COUNT_ROWS);
@@ -61,7 +61,7 @@ static void print_item(uint8_t num_row, uint8_t pointer_type, void *name, uint8_
 	switch(pointer_type)
 	{
 		case PROGMEM_POINTER:
-			if(is_active) // Р•СЃР»Рё СЌР»РµРјРµРЅС‚ РјРµРЅСЋ Р°РєС‚РёРІРЅС‹Р№
+			if(is_active) // Если элемент меню активный
 			{
 				gotoxy_lcd_buf(get_center(strlen_P(name)) - 2, num_row + HEADER_COUNT_ROWS);
 				print_lcd_buf(">");
@@ -96,136 +96,136 @@ static void print_item(uint8_t num_row, uint8_t pointer_type, void *name, uint8_
 	}
 }
 
-static void menu_run_process(uint8_t num) // РћРїРёСЃС‹РІР°РµРј РєР°Рє Р·Р°РїСѓСЃС‚РёС‚СЊ РїСЂРѕС†РµСЃСЃ
+static void menu_run_process(uint8_t num) // Описываем как запустить процесс
 {
     run_process(num, NULL);
 }
 
-static void menu_switch_process(uint8_t num) // РћРїРёСЃС‹РІР°РµРј РєР°Рє РїРµСЂРµРєР»СЋС‡РёС‚СЃСЏ РІ РґСЂСѓРіРѕР№ РїСЂРѕС†РµСЃСЃ
+static void menu_switch_process(uint8_t num) // Описываем как переключится в другой процесс
 {
-    if(switch_process(num)) //Р•СЃР»Рё РЅРµСѓР¶Р°Р»РѕСЃСЊ РїРµСЂРµРєР»СЋС‡РёС‚СЊСЃСЏ РІ СѓРєР°Р·Р°РЅРЅС‹Р№ РїСЂРѕС†РµСЃСЃ С‚Рѕ РїРµСЂРµРєР»СЋС‡Р°РµРјСЃСЏ РІ РїСЂРѕС†РµСЃСЃ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
+    if(switch_process(num)) //Если неужалось переключиться в указанный процесс то переключаемся в процесс по умолчанию
 		switch_process(DEFAULT_PROCESS);
 }
 
-static void change_access_to_washing(void) // Р¤СѓРЅРєС†РёСЏ callback , РїРѕРґР±РёСЂР°РµС‚ РїР°СЂР°РјРµС‚СЂС‹ СЃС‚РёСЂРєРё РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РїСЂРµСЃРµС‚Р°
+static void change_access_to_washing(void) // Функция callback , подбирает параметры стирки в зависимости от пресета
 {
-	Washing_settings.bedabble_water_soure = 1; // РСЃС‚РѕС‡РЅРёРє РїРѕСЂРѕС€РєР° РґР»СЏ Р·Р°РјР°С‡РёРІР°РЅРёСЏ
-	Washing_settings.prev_washing_water_soure = 1; // РСЃС‚РѕС‡РЅРёРє РїРѕСЂРѕС€РєР° РґР»СЏ РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕР№ СЃС‚РёСЂРєРё
-	Washing_settings.washing_water_soure = 0; // РСЃС‚РѕС‡РЅРёРє РїРѕСЂРѕС€РєР° РґР»СЏ СЃС‚РёСЂРєРё
+	Washing_settings.bedabble_water_soure = 1; // Источник порошка для замачивания
+	Washing_settings.prev_washing_water_soure = 1; // Источник порошка для предварительной стирки
+	Washing_settings.washing_water_soure = 0; // Источник порошка для стирки
 
-	switch(Washing_settings.washing_preset) // Р’ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РІС‹Р±СЂР°РЅРЅРѕРіРѕ СЂРµР¶РёРјР° СЃС‚РёСЂРєРё, Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РЅР°СЃС‚СЂР°РёРІР°РµРј СЂР°Р·Р»РёС‡РЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ СЃС‚РёСЂРєРё
+	switch(Washing_settings.washing_preset) // В зависимости от выбранного режима стирки, автоматически настраиваем различные параметры стирки
 	{
-		case 0: // РҐР»РѕРїРѕРє 95
-			Washing_settings.enable_prev_washing = 1; // РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅСѓСЋ СЃС‚РёСЂРєСѓ
-			Washing_settings.washing_time_part1 = 40; // 30 РјРёРЅСѓС‚ РІСЂРµРјСЏ СЃС‚РёСЂРєРё С„Р°Р·С‹ РѕРґРёРЅ
-			Washing_settings.temperature_part1 = 3; // 60 РіСЂР°РґСѓСЃРѕРІ С„Р°Р·С‹ РѕРґРёРЅ
-			Washing_settings.enable_washing_part2	= 1; //Р’РєР»СЋС‡Р°РµРј С„Р°Р·Сѓ РґРІР°
-			Washing_settings.washing_time_part2 = 30; // 30 РјРёРЅСѓС‚ РІСЂРµРјСЏ СЃС‚РёСЂРєРё С„Р°Р·С‹ РґРІР°
-			Washing_settings.temperature_part2 = 5; // 95 РіСЂР°РґСѓСЃРѕРІ С„Р°Р·С‹ РґРІР°
-			Washing_settings.count_rinses = 4; // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
-			Washing_settings.wring_speed = 1200; // РЎРєРѕСЂРѕСЃС‚СЊ РѕС‚Р¶РёРјР°
-			Washing_settings.wring_time = 7; // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР° 7 РјРёРЅСѓС‚
-			Washing_settings.washing_mode = 0; // Р РµР¶РёРј РѕР±С‹С‡РЅРѕР№ СЃС‚РёСЂРєРё
-			Washing_settings.washing_water_level = 5; //РљРѕР»РёС‡РµСЃС‚РІРѕ РІРѕРґС‹
+		case 0: // Хлопок 95
+			Washing_settings.enable_prev_washing = 1; // Предварительную стирку
+			Washing_settings.washing_time_part1 = 40; // 30 минут время стирки фазы один
+			Washing_settings.temperature_part1 = 3; // 60 градусов фазы один
+			Washing_settings.enable_washing_part2	= 1; //Включаем фазу два
+			Washing_settings.washing_time_part2 = 30; // 30 минут время стирки фазы два
+			Washing_settings.temperature_part2 = 5; // 95 градусов фазы два
+			Washing_settings.count_rinses = 4; // Количество полосканий
+			Washing_settings.wring_speed = 1200; // Скорость отжима
+			Washing_settings.wring_time = 7; // Время отжима 7 минут
+			Washing_settings.washing_mode = 0; // Режим обычной стирки
+			Washing_settings.washing_water_level = 5; //Количество воды
 		break;
 
-		case 1: // РҐР»РѕРїРѕРє 60
+		case 1: // Хлопок 60
 			Washing_settings.enable_prev_washing = 1;
-			Washing_settings.washing_time_part1 = 60; // РІСЂРµРјСЏ СЃС‚РёСЂРєРё
-			Washing_settings.temperature_part1 = 3; // 60 РіСЂР°РґСѓСЃРѕРІ
-			Washing_settings.enable_washing_part2	= 0; //Р’С‹РєР»СЋС‡Р°РµРј С„Р°Р·Сѓ РґРІР°
-			Washing_settings.count_rinses = 4; // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
-			Washing_settings.wring_speed = 1200; // РЎРєРѕСЂРѕСЃС‚СЊ РѕС‚Р¶РёРјР°
-			Washing_settings.wring_time = 7; // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР°
-			Washing_settings.washing_mode = 0; // Р РµР¶РёРј РѕР±С‹С‡РЅРѕР№ СЃС‚РёСЂРєРё
-			Washing_settings.washing_water_level = 4; //РљРѕР»РёС‡РµСЃС‚РІРѕ РІРѕРґС‹
+			Washing_settings.washing_time_part1 = 60; // время стирки
+			Washing_settings.temperature_part1 = 3; // 60 градусов
+			Washing_settings.enable_washing_part2	= 0; //Выключаем фазу два
+			Washing_settings.count_rinses = 4; // Количество полосканий
+			Washing_settings.wring_speed = 1200; // Скорость отжима
+			Washing_settings.wring_time = 7; // Время отжима
+			Washing_settings.washing_mode = 0; // Режим обычной стирки
+			Washing_settings.washing_water_level = 4; //Количество воды
 		break;
 
-		case 2: // РЎРёРЅС‚РµС‚РёРєР° 70
+		case 2: // Синтетика 70
 			Washing_settings.enable_prev_washing = 0;
-			Washing_settings.washing_time_part1 = 20; // РІСЂРµРјСЏ СЃС‚РёСЂРєРё
-			Washing_settings.temperature_part1 = 2; // 40 РіСЂР°РґСѓСЃРѕРІ
-			Washing_settings.enable_washing_part2	= 1; //Р’РєР»СЋС‡Р°РµРј С„Р°Р·Сѓ РґРІР°
-			Washing_settings.washing_time_part2 = 30; // 30 РјРёРЅСѓС‚ РІСЂРµРјСЏ СЃС‚РёСЂРєРё С„Р°Р·С‹ РґРІР°
-			Washing_settings.temperature_part2 = 4; // 70 РіСЂР°РґСѓСЃРѕРІ С„Р°Р·С‹ РґРІР°
-			Washing_settings.count_rinses = 3; // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
-			Washing_settings.wring_speed = 1000; // РЎРєРѕСЂРѕСЃС‚СЊ РѕС‚Р¶РёРјР°
-			Washing_settings.wring_time = 5; // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР°
-			Washing_settings.washing_mode = 0; // Р РµР¶РёРј РѕР±С‹С‡РЅРѕР№ СЃС‚РёСЂРєРё
-			Washing_settings.washing_water_level = 5; //РљРѕР»РёС‡РµСЃС‚РІРѕ РІРѕРґС‹
+			Washing_settings.washing_time_part1 = 20; // время стирки
+			Washing_settings.temperature_part1 = 2; // 40 градусов
+			Washing_settings.enable_washing_part2	= 1; //Включаем фазу два
+			Washing_settings.washing_time_part2 = 30; // 30 минут время стирки фазы два
+			Washing_settings.temperature_part2 = 4; // 70 градусов фазы два
+			Washing_settings.count_rinses = 3; // Количество полосканий
+			Washing_settings.wring_speed = 1000; // Скорость отжима
+			Washing_settings.wring_time = 5; // Время отжима
+			Washing_settings.washing_mode = 0; // Режим обычной стирки
+			Washing_settings.washing_water_level = 5; //Количество воды
 		break;
 
-		case 3: // РЎРёРЅС‚РµС‚РёРєР° 40
+		case 3: // Синтетика 40
 			Washing_settings.enable_prev_washing = 0;
-			Washing_settings.washing_time_part1 = 40; // РІСЂРµРјСЏ СЃС‚РёСЂРєРё
-			Washing_settings.temperature_part1 = 2; // 40 РіСЂР°РґСѓСЃРѕРІ
-			Washing_settings.enable_washing_part2	= 0; //Р’С‹РєР»СЋС‡Р°РµРј С„Р°Р·Сѓ РґРІР°
-			Washing_settings.count_rinses = 3; // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
-			Washing_settings.wring_speed = 900; // РЎРєРѕСЂРѕСЃС‚СЊ РѕС‚Р¶РёРјР°
-			Washing_settings.wring_time = 5; // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР°
-			Washing_settings.washing_mode = 0; // Р РµР¶РёРј РѕР±С‹С‡РЅРѕР№ СЃС‚РёСЂРєРё
-			Washing_settings.washing_water_level = 4; //РљРѕР»РёС‡РµСЃС‚РІРѕ РІРѕРґС‹
+			Washing_settings.washing_time_part1 = 40; // время стирки
+			Washing_settings.temperature_part1 = 2; // 40 градусов
+			Washing_settings.enable_washing_part2	= 0; //Выключаем фазу два
+			Washing_settings.count_rinses = 3; // Количество полосканий
+			Washing_settings.wring_speed = 900; // Скорость отжима
+			Washing_settings.wring_time = 5; // Время отжима
+			Washing_settings.washing_mode = 0; // Режим обычной стирки
+			Washing_settings.washing_water_level = 4; //Количество воды
 		break;
 
-		case 4: // Р”Р¶РёРЅСЃС‹
+		case 4: // Джинсы
 			Washing_settings.enable_prev_washing = 0;
-			Washing_settings.washing_time_part1 = 30; // РІСЂРµРјСЏ СЃС‚РёСЂРєРё
-			Washing_settings.temperature_part1 = 2; // 40 РіСЂР°РґСѓСЃРѕРІ
-			Washing_settings.enable_washing_part2	= 0; //Р’С‹РєР»СЋС‡Р°РµРј С„Р°Р·Сѓ РґРІР°
-			Washing_settings.count_rinses = 3; // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
-			Washing_settings.wring_speed = 1200; // РЎРєРѕСЂРѕСЃС‚СЊ РѕС‚Р¶РёРјР°
-			Washing_settings.wring_time = 7; // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР°
-			Washing_settings.washing_mode = 0; // Р РµР¶РёРј РѕР±С‹С‡РЅРѕР№ СЃС‚РёСЂРєРё
-			Washing_settings.washing_water_level = 4; //РљРѕР»РёС‡РµСЃС‚РІРѕ РІРѕРґС‹
+			Washing_settings.washing_time_part1 = 30; // время стирки
+			Washing_settings.temperature_part1 = 2; // 40 градусов
+			Washing_settings.enable_washing_part2	= 0; //Выключаем фазу два
+			Washing_settings.count_rinses = 3; // Количество полосканий
+			Washing_settings.wring_speed = 1200; // Скорость отжима
+			Washing_settings.wring_time = 7; // Время отжима
+			Washing_settings.washing_mode = 0; // Режим обычной стирки
+			Washing_settings.washing_water_level = 4; //Количество воды
 		break;
 
-		case 5: // Р‘РµСЂРµР¶РЅР°СЏ
+		case 5: // Бережная
 			Washing_settings.enable_prev_washing = 0;
-			Washing_settings.washing_time_part1 = 30; // РІСЂРµРјСЏ СЃС‚РёСЂРєРё
-			Washing_settings.temperature_part1 = 2; // 40 РіСЂР°РґСѓСЃРѕРІ
-			Washing_settings.enable_washing_part2	= 0; //Р’С‹РєР»СЋС‡Р°РµРј С„Р°Р·Сѓ РґРІР°
-			Washing_settings.count_rinses = 3; // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
-			Washing_settings.wring_speed = 600; // РЎРєРѕСЂРѕСЃС‚СЊ РѕС‚Р¶РёРјР°
-			Washing_settings.wring_time = 5; // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР°
-			Washing_settings.washing_mode = 1; // Р РµР¶РёРј РґРµР»РёРєР°С‚РЅРѕР№ СЃС‚РёСЂРєРё
-			Washing_settings.washing_water_level = 5; //РљРѕР»РёС‡РµСЃС‚РІРѕ РІРѕРґС‹
+			Washing_settings.washing_time_part1 = 30; // время стирки
+			Washing_settings.temperature_part1 = 2; // 40 градусов
+			Washing_settings.enable_washing_part2	= 0; //Выключаем фазу два
+			Washing_settings.count_rinses = 3; // Количество полосканий
+			Washing_settings.wring_speed = 600; // Скорость отжима
+			Washing_settings.wring_time = 5; // Время отжима
+			Washing_settings.washing_mode = 1; // Режим деликатной стирки
+			Washing_settings.washing_water_level = 5; //Количество воды
 		break;
 
-		case 6: // РЁРµСЂСЃС‚СЊ
+		case 6: // Шерсть
 			Washing_settings.enable_prev_washing = 0;
-			Washing_settings.washing_time_part1 = 30; // РІСЂРµРјСЏ СЃС‚РёСЂРєРё
-			Washing_settings.temperature_part1 = 1; // 30 РіСЂР°РґСѓСЃРѕРІ
-			Washing_settings.enable_washing_part2	= 0; //Р’С‹РєР»СЋС‡Р°РµРј С„Р°Р·Сѓ РґРІР°
-			Washing_settings.count_rinses = 5; // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
-			Washing_settings.wring_speed = 400; // РЎРєРѕСЂРѕСЃС‚СЊ РѕС‚Р¶РёРјР°
-			Washing_settings.wring_time = 3; // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР°
-			Washing_settings.washing_mode = 1; // Р РµР¶РёРј РґРµР»РёРєР°С‚РЅРѕР№ СЃС‚РёСЂРєРё
-			Washing_settings.washing_water_level = 6; //РљРѕР»РёС‡РµСЃС‚РІРѕ РІРѕРґС‹
+			Washing_settings.washing_time_part1 = 30; // время стирки
+			Washing_settings.temperature_part1 = 1; // 30 градусов
+			Washing_settings.enable_washing_part2	= 0; //Выключаем фазу два
+			Washing_settings.count_rinses = 5; // Количество полосканий
+			Washing_settings.wring_speed = 400; // Скорость отжима
+			Washing_settings.wring_time = 3; // Время отжима
+			Washing_settings.washing_mode = 1; // Режим деликатной стирки
+			Washing_settings.washing_water_level = 6; //Количество воды
 		break;
 
-		case 7: // РќРѕСЃРєРё
+		case 7: // Носки
 			Washing_settings.enable_prev_washing = 0;
-			Washing_settings.washing_time_part1 = 40; // РІСЂРµРјСЏ СЃС‚РёСЂРєРё
-			Washing_settings.temperature_part1 = 3; // 60 РіСЂР°РґСѓСЃРѕРІ
-			Washing_settings.enable_washing_part2	= 0; //Р’С‹РєР»СЋС‡Р°РµРј С„Р°Р·Сѓ РґРІР°
-			Washing_settings.count_rinses = 3; // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
-			Washing_settings.wring_speed = 900; // РЎРєРѕСЂРѕСЃС‚СЊ РѕС‚Р¶РёРјР°
-			Washing_settings.wring_time = 5; // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР°
-			Washing_settings.washing_mode = 0; // Р РµР¶РёРј РґРµР»РёРєР°С‚РЅРѕР№ СЃС‚РёСЂРєРё
-			Washing_settings.washing_water_level = 3; //РљРѕР»РёС‡РµСЃС‚РІРѕ РІРѕРґС‹
+			Washing_settings.washing_time_part1 = 40; // время стирки
+			Washing_settings.temperature_part1 = 3; // 60 градусов
+			Washing_settings.enable_washing_part2	= 0; //Выключаем фазу два
+			Washing_settings.count_rinses = 3; // Количество полосканий
+			Washing_settings.wring_speed = 900; // Скорость отжима
+			Washing_settings.wring_time = 5; // Время отжима
+			Washing_settings.washing_mode = 0; // Режим деликатной стирки
+			Washing_settings.washing_water_level = 3; //Количество воды
 		break;
 	}
 
-	Washing_settings.bedabble_water_soure = 2; // РСЃС‚РѕС‡РЅРёРє РїРѕСЂРѕС€РєР° РґР»СЏ Р·Р°РјР°С‡РёРІР°РЅРёСЏ
-	Washing_settings.prev_washing_water_soure = 2; // РСЃС‚РѕС‡РЅРёРє РїРѕСЂРѕС€РєР° РґР»СЏ РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕР№ СЃС‚РёСЂРєРё
-	Washing_settings.washing_water_soure = 1; // РСЃС‚РѕС‡РЅРёРє РїРѕСЂРѕС€РєР° РґР»СЏ СЃС‚РёСЂРєРё
+	Washing_settings.bedabble_water_soure = 2; // Источник порошка для замачивания
+	Washing_settings.prev_washing_water_soure = 2; // Источник порошка для предварительной стирки
+	Washing_settings.washing_water_soure = 1; // Источник порошка для стирки
 
-	refresh_menu(1); //РћР±РЅРѕРІРёС‚СЊ РґРµСЂРµРІРѕ РјРµРЅСЋ
+	refresh_menu(1); //Обновить дерево меню
 }
 
-static void change_access_to_bedabble(void) // Р¤СѓРЅРєС†РёСЏ callback РґР»СЏ Р±Р»РѕРєРёСЂРѕРІРєРё РёР»Рё СЂР°Р·Р±Р»РѕРєРёСЂРѕРІРєРё РІРµС‚РѕРє РјРµРЅСЋ РѕС‚РЅРѕСЃСЏС‰РёС…СЃСЏ Рє Р·Р°РјР°С‡РёРІР°РЅРёСЋ
+static void change_access_to_bedabble(void) // Функция callback для блокировки или разблокировки веток меню относящихся к замачиванию
 {
-	if(Washing_settings.bedabble_time) //Р•СЃР»Рё РІС‹Р±СЂР°РЅРѕ РІСЂРµРјСЏ Р·Р°РјР°С‡РёРІР°РЅРёСЏ, С‚Рѕ РІРєР»СЋС‡Р°РµРј РїСѓРЅРєС‚ "Р·Р°РјРѕС‡РёС‚СЊ"
+	if(Washing_settings.bedabble_time) //Если выбрано время замачивания, то включаем пункт "замочить"
 	{
 		enable_menu_item(4);
 		enable_menu_item(5);
@@ -239,19 +239,19 @@ static void change_access_to_bedabble(void) // Р¤СѓРЅРєС†РёСЏ callback РґР»СЏ Р±
 
 static void bedabble_stop(void)
 {
-	send_signal(PROCESS_BEDABBLE, 5); // РџРѕСЃС‹Р»Р°РµРј СЃРёРіРЅР°Р» 5 РїСЂРѕС†РµСЃСЃСѓ "Р·Р°РјР°С‡РёРІР°РЅРёРµ", С‡С‚РѕР±С‹ С‚РѕС‚ РѕСЃС‚Р°РЅРѕРІРёР»СЃСЏ
+	send_signal(PROCESS_BEDABBLE, 5); // Посылаем сигнал 5 процессу "замачивание", чтобы тот остановился
 }
 
-static void washing_stop(void) // Р¤СѓРЅРєС†РёСЏ Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ РёР· РјРµРЅСЋ "РѕСЃС‚Р°РЅРѕРІРёС‚СЊ СЃС‚РёСЂРєСѓ"
+static void washing_stop(void) // Функция запускается из меню "остановить стирку"
 {
-	send_signal(PROCESS_WASHING, 5); // РџРѕСЃС‹Р»Р°РµРј СЃРёРіРЅР°Р» 5 РїСЂРѕС†РµСЃСЃСѓ "СЃС‚РёСЂРєР°", С‡С‚РѕР±С‹ С‚РѕС‚ РѕСЃС‚Р°РЅРѕРІРёР»СЃСЏ
+	send_signal(PROCESS_WASHING, 5); // Посылаем сигнал 5 процессу "стирка", чтобы тот остановился
 }
 
 static void change_access_to_prev_washing(void)
 {
-	if(Washing_settings.washing_mode) //Р•СЃР»Рё РІС‹Р±СЂР°РЅ РґРµР»РёРєР°С‚РЅС‹Р№ СЂРµР¶РёРј С‚Рѕ Р±Р»РѕРєРёСЂСѓРµРј РІС‹Р±РѕСЂ РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕР№ СЃС‚РёСЂРєРё ,Рё СЂР°Р·СѓРјРµРµС‚СЃСЏ РІС‹РєР»СЋС‡Р°РµРј РµС‘
+	if(Washing_settings.washing_mode) //Если выбран деликатный режим то блокируем выбор предварительной стирки ,и разумеется выключаем её
 	{
-		Washing_settings.enable_prev_washing = 0; //Р’С‹РєР»СЋС‡Р°РµРј РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅСѓСЋ СЃС‚РёСЂРєСѓ
+		Washing_settings.enable_prev_washing = 0; //Выключаем предварительную стирку
 		disable_menu_item(11);
 	}
 	else
@@ -262,7 +262,7 @@ static void change_access_to_prev_washing(void)
 
 static void change_access_prev_source_water(void)
 {
-	if(Washing_settings.enable_prev_washing) // Р•СЃР»Рё РІРєР»СЋС‡РµРЅРЅР° РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅР°СЏ СЃС‚РёСЂРєР°, С‚Рѕ РїСЂРµРґР»РѕРіР°РµРј РІС‹Р±РѕСЂ РёСЃС‚РѕС‡РЅРёРєР° РїРѕСЂРѕС€РєР° РёРЅР°С‡Рµ С‚Р°РєРѕР№ РІС‹Р±РѕСЂ СѓР±РёСЂР°РµРј
+	if(Washing_settings.enable_prev_washing) // Если включенна предварительная стирка, то предлогаем выбор источника порошка иначе такой выбор убираем
 		enable_menu_item(13);
 	else
 		disable_menu_item(13);
@@ -270,7 +270,7 @@ static void change_access_prev_source_water(void)
 
 static void change_access_washing_part2(void)
 {
-	if(Washing_settings.enable_washing_part2) // Р•СЃР»Рё РІРєР»СЋС‡РµРЅРЅР° РІС‚РѕСЂР°СЏ С„Р°Р·Р° СЃС‚РёСЂРєРё С‚Рѕ РІРєР»СЋС‡Р°РµРј РІСЃРµ РЅР°СЃС‚СЂРѕР№РєРё СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ РЅРµР№
+	if(Washing_settings.enable_washing_part2) // Если включенна вторая фаза стирки то включаем все настройки связанные с ней
 	{
 		enable_menu_item(34);
 		enable_menu_item(35);
@@ -282,24 +282,24 @@ static void change_access_washing_part2(void)
 	}
 }
 
-static void rinse_stop(void) // Р¤СѓРЅРєС†РёСЏ Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ РёР· РјРµРЅСЋ "РѕСЃС‚Р°РЅРѕРІРёС‚СЊ РїРѕР»РѕСЃРєР°РЅРёРµ"
+static void rinse_stop(void) // Функция запускается из меню "остановить полоскание"
 {
-	send_signal(PROCESS_RINSE, 5); // РџРѕСЃС‹Р»Р°РµРј СЃРёРіРЅР°Р» 5 РїСЂРѕС†РµСЃСЃСѓ "РїРѕР»РѕСЃРєР°РЅРёРµ", С‡С‚РѕР±С‹ С‚РѕС‚ РѕСЃС‚Р°РЅРѕРІРёР»СЃСЏ
+	send_signal(PROCESS_RINSE, 5); // Посылаем сигнал 5 процессу "полоскание", чтобы тот остановился
 }
 
-static void wring_stop(void) // Р¤СѓРЅРєС†РёСЏ Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ РёР· РјРµРЅСЋ "РѕСЃС‚Р°РЅРѕРІРёС‚СЊ РѕС‚Р¶РёРј"
+static void wring_stop(void) // Функция запускается из меню "остановить отжим"
 {
 	printf("send_signal(PROCESS_WRING, 5)");
-	send_signal(PROCESS_WRING, 5); // РџРѕСЃС‹Р»Р°РµРј СЃРёРіРЅР°Р» 5 РїСЂРѕС†РµСЃСЃСѓ "РїРѕР»РѕСЃРєР°РЅРёРµ", С‡С‚РѕР±С‹ С‚РѕС‚ РѕСЃС‚Р°РЅРѕРІРёР»СЃСЏ
+	send_signal(PROCESS_WRING, 5); // Посылаем сигнал 5 процессу "полоскание", чтобы тот остановился
 }
 
 
 static struct menu_item Menu[] =
 {
 	{
-		.id = 0, // РљРѕСЂРЅРµРІРѕР№ СЌР»РµРјРµРЅС‚ РјРµРЅСЋ
+		.id = 0, // Корневой элемент меню
 		.parent_id = 0,
-		.name = GET_MESS_POINTER(MENU_ITEM_MAIN),  //РњРµРЅСЋ
+		.name = GET_MESS_POINTER(MENU_ITEM_MAIN),  //Меню
 		.type = GROUP,
 		.visible = 1,
 		.on_click = NULL,
@@ -307,7 +307,7 @@ static struct menu_item Menu[] =
 	{
 				.id = 1,
 				.parent_id = 0,
-				.name = GET_MESS_POINTER(MENU_ITEM_WASHING_PRESET),  // РњРµС‚РѕРґ СЃС‚РёСЂРєРё
+				.name = GET_MESS_POINTER(MENU_ITEM_WASHING_PRESET),  // Метод стирки
 				.type = SELECT_PARAM,
 				.value = &Washing_settings.washing_preset,
 				.select_variants = Select_washing_presetes,
@@ -318,7 +318,7 @@ static struct menu_item Menu[] =
 	{
 				.id = 2,
 				.parent_id = 0,
-				.name = GET_MESS_POINTER(MENU_ITEM_WASHING_BEDABBLE),  // Р—Р°РјР°С‡РёРІР°РЅРёРµ
+				.name = GET_MESS_POINTER(MENU_ITEM_WASHING_BEDABBLE),  // Замачивание
 				.type = GROUP,
 				.visible = 1,
 				.on_click = NULL,
@@ -326,7 +326,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 3,
 						.parent_id = 2,
-						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_BEDABBLE_TIME),  // Р’С‹Р±РѕСЂ РІСЂРµРјРµРЅРё Р·Р°РјР°С‡РёРІР°РЅРёСЏ
+						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_BEDABBLE_TIME),  // Выбор времени замачивания
 						.type = SELECT_PARAM,
 						.value = &Washing_settings.bedabble_time,
 						.select_variants = Select_bedabble_time,
@@ -337,20 +337,20 @@ static struct menu_item Menu[] =
 	{
 						.id = 4,
 						.parent_id = 2,
-						.name = GET_MESS_POINTER(MENU_ITEM_WATER_SOURCE),  // РСЃС‚РѕС‡РЅРёРє РїРѕСЂРѕС€РєР° (РґР»СЏ Р·Р°РјР°С‡РёРІР°РЅРёСЏ)
+						.name = GET_MESS_POINTER(MENU_ITEM_WATER_SOURCE),  // Источник порошка (для замачивания)
 						.type = CHANGE_NUMBER,
 						.value = &Washing_settings.bedabble_water_soure,
 						.min = 1,
 						.count = 2,
 						.step = 1,
-						.postfix = "РѕС‚СЃРµРє",
+						.postfix = "отсек",
 						.visible = 0,
 						.on_click = NULL,
 	},
 	{
 						.id = 5,
 						.parent_id = 2,
-						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_BEDABBLE_START_NOW),  // Р—Р°РјРѕС‡РёС‚СЊ СЃРµР№С‡Р°СЃ
+						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_BEDABBLE_START_NOW),  // Замочить сейчас
 						.type = RUN_PROCESS,
 						.process_id = PROCESS_BEDABBLE,
 						.visible = 0,
@@ -359,7 +359,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 6,
 						.parent_id = 2,
-						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_BEDABBLE_STOP_NOW),  // РћСЃС‚Р°РЅРѕРІРёС‚СЊ Р·Р°РјР°С‡РёРІР°РЅРёРµ
+						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_BEDABBLE_STOP_NOW),  // Остановить замачивание
 						.type = RUN_FUNCTION,
 						.visible = 0,
 						.on_click = bedabble_stop,
@@ -367,7 +367,7 @@ static struct menu_item Menu[] =
 	{
 				.id = 9,
 				.parent_id = 0,
-				.name = GET_MESS_POINTER(MENU_ITEM_WASHING_PARAMS),  // РџР°СЂР°РјРµС‚СЂС‹ СЃС‚РёСЂРєРё
+				.name = GET_MESS_POINTER(MENU_ITEM_WASHING_PARAMS),  // Параметры стирки
 				.type = GROUP,
 				.visible = 1,
 				.on_click = NULL,
@@ -375,7 +375,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 10,
 						.parent_id = 9,
-						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_MODE),  // Р РµР¶РёРј СЃС‚РёСЂРєРё
+						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_MODE),  // Режим стирки
 						.type = SELECT_PARAM,
 						.value = &Washing_settings.washing_mode,
 						.select_variants = Select_washing_mode,
@@ -386,7 +386,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 11,
 						.parent_id = 9,
-						.name = GET_MESS_POINTER(MENU_ITEM_PREVIOUS_WASHING),  // РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅР°СЏ СЃС‚РёСЂРєР°
+						.name = GET_MESS_POINTER(MENU_ITEM_PREVIOUS_WASHING),  // Предварительная стирка
 						.type = GROUP,
 						.visible = 1,
 						.on_click = NULL,
@@ -394,7 +394,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 12,
 								.parent_id = 11,
-								.name = GET_MESS_POINTER(MENU_ITEM_SWITCH_TEXT),  // РІРєР»./РІС‹РєР».
+								.name = GET_MESS_POINTER(MENU_ITEM_SWITCH_TEXT),  // вкл./выкл.
 								.type = SELECT_PARAM,
 								.value = &Washing_settings.enable_prev_washing,
 								.select_variants = Select_switch,
@@ -405,20 +405,20 @@ static struct menu_item Menu[] =
 	{
 								.id = 13,
 								.parent_id = 11,
-								.name = GET_MESS_POINTER(MENU_ITEM_WATER_SOURCE),  // РСЃС‚РѕС‡РЅРёРє РїРѕСЂРѕС€РєР° (РґР»СЏ РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕР№ СЃС‚РёСЂРєРё)
+								.name = GET_MESS_POINTER(MENU_ITEM_WATER_SOURCE),  // Источник порошка (для предварительной стирки)
 								.type = CHANGE_NUMBER,
 								.value = &Washing_settings.prev_washing_water_soure,
 								.min = 1,
 								.count = 2,
 								.step = 1,
-								.postfix = "РѕС‚СЃРµРє",
+								.postfix = "отсек",
 								.visible = 0,
 								.on_click = NULL,
 	},
 	{
 						.id = 31,
 						.parent_id = 9,
-						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_PART1),  // 1Р°СЏ С„Р°Р·Р° СЃС‚РёСЂРєРё
+						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_PART1),  // 1ая фаза стирки
 						.type = GROUP,
 						.visible = 1,
 						.on_click = NULL,
@@ -426,7 +426,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 14,
 								.parent_id = 31,
-								.name = GET_MESS_POINTER(MENU_ITEM_TEMPERATURE),  // РўРµРјРїРµСЂР°С‚СѓСЂР°
+								.name = GET_MESS_POINTER(MENU_ITEM_TEMPERATURE),  // Температура
 								.type = SELECT_PARAM,
 								.value = &Washing_settings.temperature_part1,
 								.select_variants = Select_temperatures,
@@ -437,20 +437,20 @@ static struct menu_item Menu[] =
 	{
 								.id = 15,
 								.parent_id = 31,
-								.name = GET_MESS_POINTER(MENU_ITEM_WASHING_TIME),  // Р’СЂРµРјСЏ СЃС‚РёСЂРєРё
+								.name = GET_MESS_POINTER(MENU_ITEM_WASHING_TIME),  // Время стирки
 								.type = CHANGE_NUMBER,
 								.value = &Washing_settings.washing_time_part1,
 								.min = 5,
 								.count = 10,
 								.step = 5,
-								.postfix = "РјРёРЅ.",
+								.postfix = "мин.",
 								.visible = 1,
 								.on_click = NULL,
 	},
 	{
 						.id = 32,
 						.parent_id = 9,
-						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_PART2),  // 2Р°СЏ С„Р°Р·Р° СЃС‚РёСЂРєРё
+						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_PART2),  // 2ая фаза стирки
 						.type = GROUP,
 						.visible = 1,
 						.on_click = NULL,
@@ -458,7 +458,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 33,
 								.parent_id = 32,
-								.name = GET_MESS_POINTER(MENU_ITEM_SWITCH_TEXT),  // РІРєР»./РІС‹РєР».
+								.name = GET_MESS_POINTER(MENU_ITEM_SWITCH_TEXT),  // вкл./выкл.
 								.type = SELECT_PARAM,
 								.value = &Washing_settings.enable_washing_part2,
 								.select_variants = Select_switch,
@@ -469,7 +469,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 34,
 								.parent_id = 32,
-								.name = GET_MESS_POINTER(MENU_ITEM_TEMPERATURE),  // РўРµРјРїРµСЂР°С‚СѓСЂР°
+								.name = GET_MESS_POINTER(MENU_ITEM_TEMPERATURE),  // Температура
 								.type = SELECT_PARAM,
 								.value = &Washing_settings.temperature_part2,
 								.select_variants = Select_temperatures,
@@ -480,46 +480,46 @@ static struct menu_item Menu[] =
 	{
 								.id = 35,
 								.parent_id = 32,
-								.name = GET_MESS_POINTER(MENU_ITEM_WASHING_TIME),  // Р’СЂРµРјСЏ СЃС‚РёСЂРєРё
+								.name = GET_MESS_POINTER(MENU_ITEM_WASHING_TIME),  // Время стирки
 								.type = CHANGE_NUMBER,
 								.value = &Washing_settings.washing_time_part2,
 								.min = 5,
 								.count = 10,
 								.step = 5,
-								.postfix = "РјРёРЅ.",
+								.postfix = "мин.",
 								.visible = 0,
 								.on_click = NULL,
 	},
 	{
 						.id = 16,
 						.parent_id = 9,
-						.name = GET_MESS_POINTER(MENU_ITEM_WATER_SOURCE),  // РСЃС‚РѕС‡РЅРёРє РїРѕСЂРѕС€РєР° (РґР»СЏ РѕСЃРЅРѕРІРЅРѕР№ СЃС‚РёСЂРєРё)
+						.name = GET_MESS_POINTER(MENU_ITEM_WATER_SOURCE),  // Источник порошка (для основной стирки)
 						.type = CHANGE_NUMBER,
 						.value = &Washing_settings.washing_water_soure,
 						.min = 1,
 						.count = 2,
 						.step = 1,
-						.postfix = "РѕС‚СЃРµРє",
+						.postfix = "отсек",
 						.visible = 1,
 						.on_click = NULL,
 	},
 	{
 						.id = 17,
 						.parent_id = 9,
-						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_WATER_LEVEL),  // РљРѕР»-РІРѕ РІРѕРґС‹
+						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_WATER_LEVEL),  // Кол-во воды
 						.type = CHANGE_NUMBER,
 						.value = &Washing_settings.washing_water_level,
 						.min = 1,
 						.count = 7,
 						.step = 1,
-						.postfix = "СѓСЂРѕРІРµРЅСЊ",
+						.postfix = "уровень",
 						.visible = 1,
 						.on_click = NULL,
 	},
 	{
 						.id = 18,
 						.parent_id = 9,
-						.name = GET_MESS_POINTER(MENU_ITEM_COUNT_RINSE),  // РљРѕР»-РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
+						.name = GET_MESS_POINTER(MENU_ITEM_COUNT_RINSE),  // Кол-во полосканий
 						.type = CHANGE_NUMBER,
 						.value = &Washing_settings.count_rinses,
 						.min = 3,
@@ -532,7 +532,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 19,
 						.parent_id = 9,
-						.name = GET_MESS_POINTER(MENU_ITEM_WRING),  // РћС‚Р¶РёРј
+						.name = GET_MESS_POINTER(MENU_ITEM_WRING),  // Отжим
 						.type = GROUP,
 						.visible = 1,
 						.on_click = NULL,
@@ -540,7 +540,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 20,
 								.parent_id = 19,
-								.name = GET_MESS_POINTER(MENU_ITEM_WRING_SPEED),  // РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ
+								.name = GET_MESS_POINTER(MENU_ITEM_WRING_SPEED),  // Максимальная скорость
 								.type = CHANGE_NUMBER,
 								.value = &Washing_settings.wring_speed,
 								.min = 200,
@@ -553,20 +553,20 @@ static struct menu_item Menu[] =
 	{
 								.id = 21,
 								.parent_id = 19,
-								.name = GET_MESS_POINTER(MENU_ITEM_WRING_TIME),  // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР°
+								.name = GET_MESS_POINTER(MENU_ITEM_WRING_TIME),  // Время отжима
 								.type = CHANGE_NUMBER,
 								.value = &Washing_settings.wring_time,
 								.min = 2,
 								.count = 5,
 								.step = 2,
-								.postfix = "РјРёРЅ.",
+								.postfix = "мин.",
 								.visible = 1,
 								.on_click = NULL,
 	},
 	{
 						.id = 22,
 						.parent_id = 9,
-						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_SWILL_SIGNAL),  // РЎРёРіРЅР°Р» РѕРїРѕР»Р°СЃРєРёРІР°РЅРёСЏ
+						.name = GET_MESS_POINTER(MENU_ITEM_WASHING_SWILL_SIGNAL),  // Сигнал ополаскивания
 						.type = SELECT_PARAM,
 						.value = &Washing_settings.signal_swill,
 						.select_variants = Select_switch,
@@ -577,7 +577,7 @@ static struct menu_item Menu[] =
 	{
 				.id = 7,
 				.parent_id = 0,
-				.name = GET_MESS_POINTER(MENU_ITEM_RUN_WASHING),  // Р—Р°РїСѓСЃРє СЃС‚РёСЂРєРё
+				.name = GET_MESS_POINTER(MENU_ITEM_RUN_WASHING),  // Запуск стирки
 				.type = RUN_PROCESS,
 				.process_id = PROCESS_WASHING,
 				.visible = 1,
@@ -586,7 +586,7 @@ static struct menu_item Menu[] =
 	{
 				.id = 8,
 				.parent_id = 0,
-				.name = GET_MESS_POINTER(MENU_ITEM_STOP_WASHING),  // РћСЃС‚Р°РЅРѕРІРёС‚СЊ СЃС‚РёСЂРєСѓ
+				.name = GET_MESS_POINTER(MENU_ITEM_STOP_WASHING),  // Остановить стирку
 				.type = RUN_FUNCTION,
 				.visible = 0,
 				.on_click = washing_stop,
@@ -594,7 +594,7 @@ static struct menu_item Menu[] =
 	{
 				.id = 23,
 				.parent_id = 0,
-				.name = GET_MESS_POINTER(MENU_ITEM_OPERATIONS),  // Р СѓС‡РЅРѕРµ СѓРїСЂР°РІР»РµРЅРёРµ
+				.name = GET_MESS_POINTER(MENU_ITEM_OPERATIONS),  // Ручное управление
 				.type = GROUP,
 				.visible = 1,
 				.on_click = NULL,
@@ -602,7 +602,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 24,
 						.parent_id = 23,
-						.name = GET_MESS_POINTER(MENU_ITEM_WATER_CONTROL),  // РЈРїСЂР°РІР»РµРЅРёРµ РІРѕРґРѕР№
+						.name = GET_MESS_POINTER(MENU_ITEM_WATER_CONTROL),  // Управление водой
 						.type = RUN_PROCESS,
 						.process_id = PROCESS_WATER_CONTROL,
 						.visible = 1,
@@ -611,7 +611,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 25,
 						.parent_id = 23,
-						.name = GET_MESS_POINTER(RINSE_MESSAGE), // РџРѕР»РѕСЃРєР°РЅРёРµ
+						.name = GET_MESS_POINTER(RINSE_MESSAGE), // Полоскание
 						.type = GROUP,
 						.visible = 1,
 						.on_click = NULL,
@@ -619,7 +619,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 36,
 								.parent_id = 25,
-								.name = GET_MESS_POINTER(MENU_ITEM_COUNT_RINSE),  // РљРѕР»-РІРѕ РїРѕР»РѕСЃРєР°РЅРёР№
+								.name = GET_MESS_POINTER(MENU_ITEM_COUNT_RINSE),  // Кол-во полосканий
 								.type = CHANGE_NUMBER,
 								.value = &Washing_settings.rinse_count,
 								.min = 1,
@@ -632,7 +632,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 37,
 								.parent_id = 25,
-								.name = GET_MESS_POINTER(MENU_ITEM_RINSE_MODE),  // Р РµР¶РёРј РїРѕР»РѕСЃРєР°РЅРёСЏ
+								.name = GET_MESS_POINTER(MENU_ITEM_RINSE_MODE),  // Режим полоскания
 								.type = SELECT_PARAM,
 								.value = &Washing_settings.rinse_mode,
 								.select_variants = Select_washing_mode,
@@ -643,20 +643,20 @@ static struct menu_item Menu[] =
 	{
 								.id = 45,
 								.parent_id = 25,
-								.name = GET_MESS_POINTER(MENU_ITEM_WATER_SOURCE),  // РСЃС‚РѕС‡РЅРёРє РІРѕРґС‹
+								.name = GET_MESS_POINTER(MENU_ITEM_WATER_SOURCE),  // Источник воды
 								.type = CHANGE_NUMBER,
 								.value = &Washing_settings.rinse_water_soure,
 								.min = 1,
 								.count = 2,
 								.step = 1,
-								.postfix = "РѕС‚СЃРµРє",
+								.postfix = "отсек",
 								.visible = 1,
 								.on_click = NULL,
 	},
 	{
 								.id = 38,
 								.parent_id = 25,
-								.name = GET_MESS_POINTER(MENU_ITEM_RUN_RINSE),  // РџРѕР»РѕСЃРєР°С‚СЊ
+								.name = GET_MESS_POINTER(MENU_ITEM_RUN_RINSE),  // Полоскать
 								.type = RUN_PROCESS,
 								.process_id = PROCESS_RINSE,
 								.visible = 1,
@@ -665,7 +665,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 39,
 								.parent_id = 25,
-								.name = GET_MESS_POINTER(MENU_ITEM_STOP_RINSE),  // РћСЃС‚Р°РЅРѕРІРёС‚СЊ РїРѕР»РѕСЃРєР°РЅРёРµ
+								.name = GET_MESS_POINTER(MENU_ITEM_STOP_RINSE),  // Остановить полоскание
 								.type = RUN_FUNCTION,
 								.visible = 0,
 								.on_click = rinse_stop,
@@ -673,7 +673,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 40,
 						.parent_id = 23,
-						.name = GET_MESS_POINTER(MENU_ITEM_WRING), // РћС‚Р¶РёРј
+						.name = GET_MESS_POINTER(MENU_ITEM_WRING), // Отжим
 						.type = GROUP,
 						.visible = 1,
 						.on_click = NULL,
@@ -681,7 +681,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 41,
 								.parent_id = 40,
-								.name = GET_MESS_POINTER(MENU_ITEM_WRING_SPEED),  // РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ
+								.name = GET_MESS_POINTER(MENU_ITEM_WRING_SPEED),  // Максимальная скорость
 								.type = CHANGE_NUMBER,
 								.value = &Washing_settings.wring_wring_speed,
 								.min = 200,
@@ -694,20 +694,20 @@ static struct menu_item Menu[] =
 	{
 								.id = 42,
 								.parent_id = 40,
-								.name = GET_MESS_POINTER(MENU_ITEM_WRING_TIME),  // Р’СЂРµРјСЏ РѕС‚Р¶РёРјР°
+								.name = GET_MESS_POINTER(MENU_ITEM_WRING_TIME),  // Время отжима
 								.type = CHANGE_NUMBER,
 								.value = &Washing_settings.wring_wring_time,
 								.min = 2,
 								.count = 5,
 								.step = 2,
-								.postfix = "РјРёРЅ.",
+								.postfix = "мин.",
 								.visible = 1,
 								.on_click = NULL,
 	},
 	{
 								.id = 43,
 								.parent_id = 40,
-								.name = GET_MESS_POINTER(MENU_ITEM_RUN_WRING),  // РћС‚Р¶Р°С‚СЊ
+								.name = GET_MESS_POINTER(MENU_ITEM_RUN_WRING),  // Отжать
 								.type = RUN_PROCESS,
 								.process_id = PROCESS_WRING,
 								.visible = 1,
@@ -716,7 +716,7 @@ static struct menu_item Menu[] =
 	{
 								.id = 44,
 								.parent_id = 40,
-								.name = GET_MESS_POINTER(MENU_ITEM_STOP_WRING),  // РћСЃС‚Р°РЅРѕРІРёС‚СЊ РѕС‚Р¶РёРј
+								.name = GET_MESS_POINTER(MENU_ITEM_STOP_WRING),  // Остановить отжим
 								.type = RUN_FUNCTION,
 								.visible = 0,
 								.on_click = wring_stop,
@@ -724,7 +724,7 @@ static struct menu_item Menu[] =
 	{
 				.id = 27,
 				.parent_id = 0,
-				.name = GET_MESS_POINTER(MENU_ITEM_SETTINGS),  // РћР±С‰РёРµ РЅР°СЃС‚СЂРѕР№РєРё
+				.name = GET_MESS_POINTER(MENU_ITEM_SETTINGS),  // Общие настройки
 				.type = GROUP,
 				.visible = 1,
 				.on_click = NULL,
@@ -732,7 +732,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 28,
 						.parent_id = 27,
-						.name = GET_MESS_POINTER(MENU_ITEM_SETTINGS_SOUND),  // Р—РІСѓРє
+						.name = GET_MESS_POINTER(MENU_ITEM_SETTINGS_SOUND),  // Звук
 						.type = SELECT_PARAM,
 						.value = &Machine_settings.sound,
 						.select_variants = Select_switch,
@@ -743,7 +743,7 @@ static struct menu_item Menu[] =
 	{
 						.id = 29,
 						.parent_id = 27,
-						.name = GET_MESS_POINTER(SET_TIME_MENU_ITEM),  // РЈСЃС‚Р°РЅРѕРІРєР° РІСЂРµРјРµРЅРё
+						.name = GET_MESS_POINTER(SET_TIME_MENU_ITEM),  // Установка времени
 						.type = RUN_PROCESS,
 						.process_id = PROCESS_SET_TIME,
 						.visible = 1,
@@ -752,17 +752,17 @@ static struct menu_item Menu[] =
 };
 
 
-struct lib_menu Lib_menu = //РЎРѕР·РґР°РµРј РѕР±СЉРµРєС‚ РёРЅРёС†РёР°Р»РёР·РёСЂСѓСЋС‰РёР№ lib_menu
+struct lib_menu Lib_menu = //Создаем объект инициализирующий lib_menu
 {
-	.tree = Menu, // Р”РµСЂРµРІРѕ РјРµРЅСЋ
-	.count_items = (sizeof(Menu) / sizeof(struct menu_item)), // РљРѕР»РёС‡РµСЃС‚РІРѕ СЌР»РµРјРµРЅС‚РѕРІ РІ РґРµСЂРµРІРµ РјРµРЅСЋ
-	.display_width = DISPLAY_WIDTH, //РЁРёСЂРёРЅР° СЌРєСЂР°РЅР° РІ СЃРёРјРІРѕР»Р°С…
-	.max_width_str = 18, // РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅРЅР° СЃС‚СЂРѕРєРё РІ РјРµРЅСЋ
-	.middle_row_num = ((DISPLAY_HEIGHT - HEADER_COUNT_ROWS - 1) / 2), // РќРѕРјРµСЂ СЃС‚СЂРѕРєРё РґР»СЏ Р°РєС‚РёРІРЅРѕРіРѕ СЌР»РµРјРµРЅС‚Р°
-	.count_rows = (DISPLAY_HEIGHT - HEADER_COUNT_ROWS), // РљРѕР»РёС‡РµСЃС‚РІРѕ СЃС‚СЂРѕРє РѕС‚РІРѕРґРёРјС‹С… РїРѕРґ РјРµРЅСЋ
-	.clear_screen = clear_screen, // Р¤СѓРЅРєС†РёСЏ РґР»СЏ РѕС‚С‡РёСЃС‚РєРё СЌРєСЂР°РЅР°
-	.print_header = print_header, // Р¤СѓРЅРєС†РёСЏ РґР»СЏ РѕС‚СЂРёСЃРѕРІРєРё Р·Р°РіРѕР»РѕРІРѕРєР° РјРµРЅСЋ
-	.print_item = print_item, // РћС‚СЂРёСЃРѕРІР°С‚СЊ СЌР»РµРјРµРЅС‚ РјРµРЅСЋ
-	.run_process = menu_run_process, //Р¤СѓРЅРєС†РёСЏ Р·Р°РїСѓСЃРєР°РµС‚ РїСЂРѕС†РµСЃСЃ
-//	.switch_process = menu_switch_process, //Р¤СѓРЅРєС†РёСЏ РїРµСЂРµРєР»СЋС‡Р°РµС‚ Р°РєС‚РёРІРЅС‹Р№ РїСЂРѕС†РµСЃСЃ
+	.tree = Menu, // Дерево меню
+	.count_items = (sizeof(Menu) / sizeof(struct menu_item)), // Количество элементов в дереве меню
+	.display_width = DISPLAY_WIDTH, //Ширина экрана в символах
+	.max_width_str = 18, // Максимальная длинна строки в меню
+	.middle_row_num = ((DISPLAY_HEIGHT - HEADER_COUNT_ROWS - 1) / 2), // Номер строки для активного элемента
+	.count_rows = (DISPLAY_HEIGHT - HEADER_COUNT_ROWS), // Количество строк отводимых под меню
+	.clear_screen = clear_screen, // Функция для отчистки экрана
+	.print_header = print_header, // Функция для отрисовки заголовока меню
+	.print_item = print_item, // Отрисовать элемент меню
+	.run_process = menu_run_process, //Функция запускает процесс
+//	.switch_process = menu_switch_process, //Функция переключает активный процесс
 };

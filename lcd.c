@@ -2,7 +2,7 @@
  Title	:   HD44780U LCD library
  Author:    Peter Fleury <pfleury@gmx.ch>  http://jump.to/fleury
  File:	    $Id: lcd.c,v 1.14.2.1 2006/01/29 12:16:41 peter Exp $
- Software:  AVR-GCC 3.3 
+ Software:  AVR-GCC 3.3
  Target:    any AVR device, memory mapped mode only for AT90S4414/8515/Mega
 
  DESCRIPTION
@@ -12,15 +12,15 @@
        changed lcd_init(), added additional constants for lcd_command(),
        added 4-bit I/O mode, improved and optimized code.
 
-       Library can be operated in memory mapped mode (LCD_IO_MODE=0) or in 
+       Library can be operated in memory mapped mode (LCD_IO_MODE=0) or in
        4-bit IO port mode (LCD_IO_MODE=1). 8-bit IO port mode not supported.
-       
+
        Memory mapped mode compatible with Kanda STK200, but supports also
        generation of R/W signal through A8 address line.
 
  USAGE
        See the C include lcd.h file for a description of each function
-       
+
 *****************************************************************************/
 #include <inttypes.h>
 #include <avr/io.h>
@@ -31,8 +31,8 @@
 
 
 
-/* 
-** constants/macros 
+/*
+** constants/macros
 */
 #define DDR(x) (*(&x - 1))      /* address of data direction register of port x */
 #if defined(__AVR_ATmega64__) || defined(__AVR_ATmega128__)
@@ -56,9 +56,9 @@
 
 #if LCD_IO_MODE
 #if LCD_LINES==1
-#define LCD_FUNCTION_DEFAULT    LCD_FUNCTION_4BIT_1LINE 
+#define LCD_FUNCTION_DEFAULT    LCD_FUNCTION_4BIT_1LINE
 #else
-#define LCD_FUNCTION_DEFAULT    LCD_FUNCTION_4BIT_2LINES 
+#define LCD_FUNCTION_DEFAULT    LCD_FUNCTION_4BIT_2LINES
 #endif
 #else
 #if LCD_LINES==1
@@ -78,8 +78,8 @@
 #endif
 #endif
 
-/* 
-** function prototypes 
+/*
+** function prototypes
 */
 #if LCD_IO_MODE
 static void toggle_e(void);
@@ -96,11 +96,11 @@ static void toggle_e(void);
 *************************************************************************/
 static inline void _delayFourCycles(unsigned int __count)
 {
-    if ( __count == 0 )    
+    if ( __count == 0 )
         __asm__ __volatile__( "rjmp 1f\n 1:" );    // 2 cycles
     else
         __asm__ __volatile__ (
-    	    "1: sbiw %0,1" "\n\t"                  
+    	    "1: sbiw %0,1" "\n\t"
     	    "brne 1b"                              // 4 cycles/loop
     	    : "=w" (__count)
     	    : "0" (__count)
@@ -108,7 +108,7 @@ static inline void _delayFourCycles(unsigned int __count)
 }
 
 
-/************************************************************************* 
+/*************************************************************************
 delay for a minimum of <us> microseconds
 the number of loops is calculated at compile-time from MCU clock frequency
 *************************************************************************/
@@ -129,12 +129,12 @@ static void toggle_e(void)
 /*************************************************************************
 Low-level function to write byte to LCD controller
 Input:    data   byte to write to LCD
-          rs     1: write data    
+          rs     1: write data
                  0: write instruction
 Returns:  none
 *************************************************************************/
 #if LCD_IO_MODE
-static void lcd_write(uint8_t data,uint8_t rs) 
+static void lcd_write(uint8_t data,uint8_t rs)
 {
     unsigned char dataBits ;
 
@@ -171,7 +171,7 @@ static void lcd_write(uint8_t data,uint8_t rs)
         DDR(LCD_DATA1_PORT) |= _BV(LCD_DATA1_PIN);
         DDR(LCD_DATA2_PORT) |= _BV(LCD_DATA2_PIN);
         DDR(LCD_DATA3_PORT) |= _BV(LCD_DATA3_PIN);
-        
+
         /* output high nibble first */
         LCD_DATA3_PORT &= ~_BV(LCD_DATA3_PIN);
         LCD_DATA2_PORT &= ~_BV(LCD_DATA2_PIN);
@@ -180,9 +180,9 @@ static void lcd_write(uint8_t data,uint8_t rs)
     	if(data & 0x80) LCD_DATA3_PORT |= _BV(LCD_DATA3_PIN);
     	if(data & 0x40) LCD_DATA2_PORT |= _BV(LCD_DATA2_PIN);
     	if(data & 0x20) LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);
-    	if(data & 0x10) LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);   
+    	if(data & 0x10) LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);
         lcd_e_toggle();
-        
+
         /* output low nibble */
         LCD_DATA3_PORT &= ~_BV(LCD_DATA3_PIN);
         LCD_DATA2_PORT &= ~_BV(LCD_DATA2_PIN);
@@ -192,8 +192,8 @@ static void lcd_write(uint8_t data,uint8_t rs)
     	if(data & 0x04) LCD_DATA2_PORT |= _BV(LCD_DATA2_PIN);
     	if(data & 0x02) LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);
     	if(data & 0x01) LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);
-        lcd_e_toggle();        
-        
+        lcd_e_toggle();
+
         /* all data pins high (inactive) */
         LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);
         LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);
@@ -210,34 +210,34 @@ static void lcd_write(uint8_t data,uint8_t rs)
 
 /*************************************************************************
 Low-level function to read byte from LCD controller
-Input:    rs     1: read data    
+Input:    rs     1: read data
                  0: read busy flag / address counter
 Returns:  byte read from LCD controller
 *************************************************************************/
 #if LCD_IO_MODE
-static uint8_t lcd_read(uint8_t rs) 
+static uint8_t lcd_read(uint8_t rs)
 {
     uint8_t data;
-    
-    
+
+
     if (rs)
         lcd_rs_high();                       /* RS=1: read data      */
     else
         lcd_rs_low();                        /* RS=0: read busy flag */
     lcd_rw_high();                           /* RW=1  read mode      */
-    
+
     if ( ( &LCD_DATA0_PORT == &LCD_DATA1_PORT) && ( &LCD_DATA1_PORT == &LCD_DATA2_PORT ) && ( &LCD_DATA2_PORT == &LCD_DATA3_PORT )
       && ( LCD_DATA0_PIN == 0 )&& (LCD_DATA1_PIN == 1) && (LCD_DATA2_PIN == 2) && (LCD_DATA3_PIN == 3) )
     {
         DDR(LCD_DATA0_PORT) &= 0xF0;         /* configure data pins as input */
-        
+
         lcd_e_high();
-        lcd_e_delay();        
+        lcd_e_delay();
         data = PIN(LCD_DATA0_PORT) << 4;     /* read high nibble first */
         lcd_e_low();
-        
+
         lcd_e_delay();                       /* Enable 500ns low       */
-        
+
         lcd_e_high();
         lcd_e_delay();
         data |= PIN(LCD_DATA0_PORT)&0x0F;    /* read low nibble        */
@@ -250,10 +250,10 @@ static uint8_t lcd_read(uint8_t rs)
         DDR(LCD_DATA1_PORT) &= ~_BV(LCD_DATA1_PIN);
         DDR(LCD_DATA2_PORT) &= ~_BV(LCD_DATA2_PIN);
         DDR(LCD_DATA3_PORT) &= ~_BV(LCD_DATA3_PIN);
-                
+
         /* read high nibble first */
         lcd_e_high();
-        lcd_e_delay();        
+        lcd_e_delay();
         data = 0;
         if ( PIN(LCD_DATA0_PORT) & _BV(LCD_DATA0_PIN) ) data |= 0x10;
         if ( PIN(LCD_DATA1_PORT) & _BV(LCD_DATA1_PIN) ) data |= 0x20;
@@ -262,14 +262,14 @@ static uint8_t lcd_read(uint8_t rs)
         lcd_e_low();
 
         lcd_e_delay();                       /* Enable 500ns low       */
-    
-        /* read low nibble */    
+
+        /* read low nibble */
         lcd_e_high();
         lcd_e_delay();
         if ( PIN(LCD_DATA0_PORT) & _BV(LCD_DATA0_PIN) ) data |= 0x01;
         if ( PIN(LCD_DATA1_PORT) & _BV(LCD_DATA1_PIN) ) data |= 0x02;
         if ( PIN(LCD_DATA2_PORT) & _BV(LCD_DATA2_PIN) ) data |= 0x04;
-        if ( PIN(LCD_DATA3_PORT) & _BV(LCD_DATA3_PIN) ) data |= 0x08;        
+        if ( PIN(LCD_DATA3_PORT) & _BV(LCD_DATA3_PIN) ) data |= 0x08;
         lcd_e_low();
     }
     return data;
@@ -288,25 +288,25 @@ static uint8_t lcd_waitbusy(void)
 
 {
     register uint8_t c;
-    
+
     /* wait until busy flag is cleared */
-	uint32_t count = 0xFFF;
+	uint32_t count = 0xFF;
     while ( (c=lcd_read(0)) & (1<<LCD_BUSY) && count > 1)
 	{
 		count--;
 	}
-    
+
     /* the address counter is updated 4us after the busy flag is cleared */
     delay(2);
 
     /* now read the address counter */
     return (lcd_read(0));  // return address counter
-    
+
 }/* lcd_waitbusy */
 
 
 /*************************************************************************
-Move cursor to the start of next line or to the first line if the cursor 
+Move cursor to the start of next line or to the first line if the cursor
 is already on the last line.
 *************************************************************************/
 static inline void lcd_newline(uint8_t pos)
@@ -331,7 +331,7 @@ static inline void lcd_newline(uint8_t pos)
         addressCounter = LCD_START_LINE3;
     else if ( (pos >= LCD_START_LINE3) && (pos < LCD_START_LINE4) )
         addressCounter = LCD_START_LINE4;
-    else 
+    else
         addressCounter = LCD_START_LINE1;
 #else
     if ( pos < LCD_START_LINE3 )
@@ -340,7 +340,7 @@ static inline void lcd_newline(uint8_t pos)
         addressCounter = LCD_START_LINE3;
     else if ( (pos >= LCD_START_LINE3) && (pos < LCD_START_LINE2) )
         addressCounter = LCD_START_LINE4;
-    else 
+    else
         addressCounter = LCD_START_LINE1;
 #endif
 #endif
@@ -350,7 +350,7 @@ static inline void lcd_newline(uint8_t pos)
 
 
 /*
-** PUBLIC FUNCTIONS 
+** PUBLIC FUNCTIONS
 */
 
 /*************************************************************************
@@ -366,7 +366,7 @@ void lcd_command(uint8_t cmd)
 
 
 /*************************************************************************
-Send data byte to LCD controller 
+Send data byte to LCD controller
 Input:   data to send to LCD controller, see HD44780 data sheet
 Returns: none
 *************************************************************************/
@@ -390,7 +390,7 @@ void lcd_gotoxy(uint8_t x, uint8_t y)
     lcd_command((1<<LCD_DDRAM)+LCD_START_LINE1+x);
 #endif
 #if LCD_LINES==2
-    if ( y==0 ) 
+    if ( y==0 )
         lcd_command((1<<LCD_DDRAM)+LCD_START_LINE1+x);
     else
         lcd_command((1<<LCD_DDRAM)+LCD_START_LINE2+x);
@@ -436,8 +436,8 @@ void lcd_home(void)
 
 
 /*************************************************************************
-Display character at current cursor position 
-Input:    character to be displayed                                       
+Display character at current cursor position
+Input:    character to be displayed
 Returns:  none
 *************************************************************************/
 void lcd_putc(char c)
@@ -459,13 +459,13 @@ void lcd_putc(char c)
         }
 #elif LCD_LINES==2
         if ( pos == LCD_START_LINE1+LCD_DISP_LENGTH ) {
-            lcd_write((1<<LCD_DDRAM)+LCD_START_LINE2,0);    
+            lcd_write((1<<LCD_DDRAM)+LCD_START_LINE2,0);
         }else if ( pos == LCD_START_LINE2+LCD_DISP_LENGTH ){
             lcd_write((1<<LCD_DDRAM)+LCD_START_LINE1,0);
         }
 #elif LCD_LINES==4
         if ( pos == LCD_START_LINE1+LCD_DISP_LENGTH ) {
-            lcd_write((1<<LCD_DDRAM)+LCD_START_LINE2,0);    
+            lcd_write((1<<LCD_DDRAM)+LCD_START_LINE2,0);
         }else if ( pos == LCD_START_LINE2+LCD_DISP_LENGTH ) {
             lcd_write((1<<LCD_DDRAM)+LCD_START_LINE3,0);
         }else if ( pos == LCD_START_LINE3+LCD_DISP_LENGTH ) {
@@ -482,7 +482,7 @@ void lcd_putc(char c)
 }/* lcd_putc */
 
 /*************************************************************************
-Display string without auto linefeed 
+Display string without auto linefeed
 Input:    string to be displayed
 Returns:  none
 *************************************************************************/
@@ -499,8 +499,8 @@ void lcd_puts(const char *s)
 
 
 /*************************************************************************
-Display string from program memory without auto linefeed 
-Input:     string from program memory be be displayed                                        
+Display string from program memory without auto linefeed
+Input:     string from program memory be be displayed
 Returns:   none
 *************************************************************************/
 void lcd_puts_p(const char *progmem_s)
@@ -516,7 +516,7 @@ void lcd_puts_p(const char *progmem_s)
 
 
 /*************************************************************************
-Initialize display and select type of cursor 
+Initialize display and select type of cursor
 Input:    dispAttr LCD_DISP_OFF            display off
                    LCD_DISP_ON             display on, cursor off
                    LCD_DISP_ON_CURSOR      display on, cursor on
@@ -529,10 +529,10 @@ void lcd_init(uint8_t dispAttr)
     /*
      *  Initialize LCD to 4 bit I/O mode
      */
-     
+
     if ( ( &LCD_DATA0_PORT == &LCD_DATA1_PORT) && ( &LCD_DATA1_PORT == &LCD_DATA2_PORT ) && ( &LCD_DATA2_PORT == &LCD_DATA3_PORT )
       && ( &LCD_RS_PORT == &LCD_DATA0_PORT) && ( &LCD_RW_PORT == &LCD_DATA0_PORT) && (&LCD_E_PORT == &LCD_DATA0_PORT)
-      && (LCD_DATA0_PIN == 0 ) && (LCD_DATA1_PIN == 1) && (LCD_DATA2_PIN == 2) && (LCD_DATA3_PIN == 3) 
+      && (LCD_DATA0_PIN == 0 ) && (LCD_DATA1_PIN == 1) && (LCD_DATA2_PIN == 2) && (LCD_DATA3_PIN == 3)
       && (LCD_RS_PIN == 4 ) && (LCD_RW_PIN == 5) && (LCD_E_PIN == 6 ) )
     {
         /* configure all port bits as output (all LCD lines on same port) */
@@ -559,42 +559,42 @@ void lcd_init(uint8_t dispAttr)
         DDR(LCD_DATA3_PORT) |= _BV(LCD_DATA3_PIN);
     }
     delay(16000);        /* wait 16ms or more after power-on       */
-    
+
     /* initial write to lcd is 8bit */
     LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);  // _BV(LCD_FUNCTION)>>4;
     LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);  // _BV(LCD_FUNCTION_8BIT)>>4;
     lcd_e_toggle();
     delay(4992);         /* delay, busy flag can't be checked here */
-   
-    /* repeat last command */ 
-    lcd_e_toggle();      
+
+    /* repeat last command */
+    lcd_e_toggle();
     delay(64);           /* delay, busy flag can't be checked here */
-    
+
     /* repeat last command a third time */
-    lcd_e_toggle();      
+    lcd_e_toggle();
     delay(64);           /* delay, busy flag can't be checked here */
 
     /* now configure for 4bit mode */
     LCD_DATA0_PORT &= ~_BV(LCD_DATA0_PIN);   // LCD_FUNCTION_4BIT_1LINE>>4
     lcd_e_toggle();
     delay(64);           /* some displays need this additional delay */
-    
-    /* from now the LCD only accepts 4 bit I/O, we can use lcd_command() */    
+
+    /* from now the LCD only accepts 4 bit I/O, we can use lcd_command() */
 #else
     /*
      * Initialize LCD to 8 bit memory mapped mode
      */
-    
-    /* enable external SRAM (memory mapped lcd) and one wait state */        
+
+    /* enable external SRAM (memory mapped lcd) and one wait state */
     MCUCR = _BV(SRE) | _BV(SRW);
 
     /* reset LCD */
     delay(16000);                           /* wait 16ms after power-on     */
-    lcd_write(LCD_FUNCTION_8BIT_1LINE,0);   /* function set: 8bit interface */                   
+    lcd_write(LCD_FUNCTION_8BIT_1LINE,0);   /* function set: 8bit interface */
     delay(4992);                            /* wait 5ms                     */
-    lcd_write(LCD_FUNCTION_8BIT_1LINE,0);   /* function set: 8bit interface */                 
+    lcd_write(LCD_FUNCTION_8BIT_1LINE,0);   /* function set: 8bit interface */
     delay(64);                              /* wait 64us                    */
-    lcd_write(LCD_FUNCTION_8BIT_1LINE,0);   /* function set: 8bit interface */                
+    lcd_write(LCD_FUNCTION_8BIT_1LINE,0);   /* function set: 8bit interface */
     delay(64);                              /* wait 64us                    */
 #endif
 
@@ -607,7 +607,7 @@ void lcd_init(uint8_t dispAttr)
     lcd_command(LCD_FUNCTION_DEFAULT);      /* function set: display lines  */
 #endif
     lcd_command(LCD_DISP_OFF);              /* display off                  */
-    lcd_clrscr();                           /* display clear                */ 
+    lcd_clrscr();                           /* display clear                */
     lcd_command(LCD_MODE_DEFAULT);          /* set entry mode               */
     lcd_command(dispAttr);                  /* display/cursor control       */
 
